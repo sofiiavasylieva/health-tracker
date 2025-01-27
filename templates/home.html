@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Health Tracker - Home</title>
+    <link rel="icon" href="{{ url_for('static', filename='images/icon.png') }}">
+    {% if section == 'indicators' %}
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/indicators.css') }}">
+    {% endif %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <header class="header">
+        <div class="logo">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Health Tracker Logo">
+            <h1>Health Tracker</h1>
+        </div>
+        <nav class="menu">
+            <ul>
+                <li><a href="{{ url_for('home', section='about') }}">Про нас</a></li>
+                <li><a href="{{ url_for('home', section='indicators') }}">Показники</a></li>
+                <li><a href="{{ url_for('home', section='calculators') }}">Калькулятори</a></li>
+                <li><a href="{{ url_for('home', section='profile') }}">Профіль</a></li>
+            </ul>
+        </nav>
+        <a class="logout-btn" href="{{ url_for('logout') }}">Вийти</a>
+    </header>
+
+    <main class="home-content">
+        {% if section == 'welcome' %}
+            <h2>Вітаємо, {{ username }}!</h2>
+            <p>Це ваш особистий помічник для трекінгу здоров'я, аналізу показників та досягнення кращого самопочуття.</p>
+            <img src="{{ url_for('static', filename='images/welcome_image.jpg') }}" alt="Welcome Image">
+        {% elif section == 'indicators' %}
+            {% include 'indicators.html' %}
+        {% elif section == 'profile' %}
+            <h2>Ваш профіль</h2>
+            <p>Тут буде інформація про ваш профіль.</p>
+        {% elif section == 'about' %}
+            <p>Тут буде інформація про нас.</p>
+        {% elif section == 'calculators' %}
+            <h2>Калькулятори</h2>
+            <p>Тут будуть три калькулятори.</p>
+        {% else %}
+            <p>Розділ не знайдено.</p>
+        {% endif %}
+    </main>
+</body>
+</html>

@@ -1,0 +1,277 @@
+/* Загальний стиль для сторінки */
+body {
+    font-family: 'Georgia', sans-serif;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column; /* Вертикальне вирівнювання */
+    justify-content: flex-start; /* Початок вертикального розташування */
+    align-items: center;
+    height: 100vh;
+    background-color: #f5f5f5;
+}
+
+header {
+    display: flex;
+    justify-content: space-between; /* Простір між елементами */
+    align-items: center; /* Вирівнювання по вертикалі */
+    padding: 20px;
+    background-color: #363ce7;
+    color: white;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    position: sticky;
+    top: 0;
+}
+
+header .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px; 
+}
+
+header .logo img {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+}
+header .menu {
+    display: flex;
+    align-items: center;
+}
+header .menu ul {
+    display: flex;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    gap: 20px;
+}
+
+header .menu ul li a {
+    color: white;
+    text-decoration: none;
+    font-size: 16px;
+    transition: color 0.3s;
+}
+
+header .menu ul li a:hover {
+    color: #ffeb3b;
+}
+
+header .logout-btn {
+    padding: 8px 16px;
+    font-size: 14px;
+    background-color: #f44336;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+    transition: background-color 0.3s;
+}
+
+header .logout-btn:hover {
+    background-color: #e53935;
+}
+
+main {
+    width: 100%;
+    max-width: 400px;
+    padding: 20px;
+    background: white;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    margin-top: 20px;
+}
+/* Головний контент */
+.home-content {
+    text-align: center;
+    padding: 20px;
+    max-width: 800px;
+    margin: 20px auto;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.home-content .welcome h2 {
+    font-size: 28px;
+    color: #1d218a;
+    margin-bottom: 20px;
+}
+
+.home-content .welcome p {
+    font-size: 18px;
+    color: #353535;
+    margin-bottom: 20px;
+    line-height: 1.6;
+}
+
+.home-content .welcome img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    margin-top: 20px;
+}
+/* Стиль форми */
+form h1 {
+    text-align: center;
+    color: #2b30ba;
+    font-size: 24px;
+    margin-bottom: 20px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 20px;
+}
+
+.form-group input {
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    outline: none;
+    transition: border-color 0.3s;
+}
+
+.form-group input:focus {
+    border-color: #363ce7;
+}
+
+.error-message {
+    color: red;
+    font-size: 14px;
+    margin-top: 5px;
+}
+
+/* Загальний стиль для сторінок логіну та реєстрації */
+.login-container, .register-container {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    padding: 30px;
+    max-width: 400px;
+    width: 100%;
+    margin: 0 auto; 
+    display: flex;
+    flex-direction: column; /* Вертикальне вирівнювання */
+    align-items: center; /* Центрування контенту */
+}
+
+/* Заголовок "Health Tracker" */
+.login-container h1, .register-container h1 {
+    font-size: 32px;
+    font-weight: bold;
+    color: #363ce7;
+    margin-bottom: 20px; /* Відступ між заголовком і формою */
+    text-align: center !important;  /* Центрування заголовка */
+}
+
+/* Форма входу/реєстрації */
+.login-form, .register-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    width: 90%;
+}
+
+.login-form input, .register-form input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 16px;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.login-form input:focus, .register-form input:focus {
+    border-color: #171b83;
+    box-shadow: 0 0 5px rgba(76, 175, 80, 0.3);
+    outline: none;
+}
+
+.login-form button, .register-form button {
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+    color: white;
+    background-color: #363ce7;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.login-form button:hover, .register-form button:hover {
+    background-color: #191c6f;
+}
+
+/* Посилання для навігації між формами */
+.register-link, .login-link {
+    margin-top: 15px;
+    font-size: 14px;
+    color: #666;
+    text-align: center;
+}
+
+.register-link a, .login-link a {
+    color: #363ce7;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.register-link a:hover, .login-link a:hover {
+    text-decoration: underline;
+}
+
+
+/* Адаптивність */
+@media (max-width: 768px) {
+    .login-container, .register-container {
+        padding: 20px;
+    }
+
+    .login-container h1, .register-container h1 {
+        font-size: 24px;
+    }
+
+    .login-form button, .register-form button {
+        font-size: 14px;
+    }
+}
+
+/* Кнопка */
+button {
+    padding: 10px;
+    width: 100%;
+    font-size: 16px;
+    color: white;
+    background-color: #4caf50;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+button:hover {
+    background-color: #363ce7;
+}
+
+/* Силки */
+.login-link,
+.register-link {
+    text-align: center;
+    margin-top: 10px;
+}
+
+.login-link a,
+.register-link a {
+    color: #363ce7;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.login-link a:hover,
+.register-link a:hover {
+    text-decoration: underline;
+}

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Register</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <header>
+        <h1>Health Tracker</h1>
+    </header>
+    <main>
+        <form method="post" action="/register" class="register-form">
+            <h1>Register</h1>
+
+            <!-- Поле для імені користувача -->
+            <div class="form-group">
+                <input type="text" name="username" placeholder="Enter your username" required>
+                {% if error_username %}
+                    <p class="error-message">{{ error_username }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Поле для email -->
+            <div class="form-group">
+                <input type="email" name="email" placeholder="Enter your email" required>
+                {% if error_email %}
+                    <p class="error-message">{{ error_email }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Поле для пароля -->
+            <div class="form-group">
+                <input type="password" name="password" placeholder="Enter your password" required>
+                {% if error_password %}
+                    <p class="error-message">{{ error_password }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Кнопка реєстрації -->
+            <button type="submit" class="register-button">Register</button>
+
+            <p class="login-link"><a href="{{ url_for('login') }}">Already have an account? Log In</a></p>
+        </form>
+    </main>
+</body>
+</html>
