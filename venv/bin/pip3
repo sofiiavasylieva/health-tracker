@@ -1,5 +1,5 @@
 #!/bin/sh
-'''exec' "/Users/sofia/Desktop/health tracker/venv/bin/python3" "$0" "$@"
+'''exec' "/Users/sofia/Desktop/university/3 курс 1 с/проєкт Health tracker/health tracker/venv/bin/python3.13" "$0" "$@"
 ' '''
 # -*- coding: utf-8 -*-
 import re

@@ -2,45 +2,36 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Register</title>
+    <title>Register - Health Tracker</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/indicators.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/calculators.css') }}">
 </head>
 <body>
     <header>
         <h1>Health Tracker</h1>
     </header>
     <main>
+        {% with messages = get_flashed_messages(with_categories=True) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
         <form method="post" action="/register" class="register-form">
-            <h1>Register</h1>
-
-            <!-- Поле для імені користувача -->
+            <h1>Реєстрація</h1>
             <div class="form-group">
-                <input type="text" name="username" placeholder="Enter your username" required>
-                {% if error_username %}
-                    <p class="error-message">{{ error_username }}</p>
-                {% endif %}
+                <input type="text" name="username" placeholder="Введіть ваше ім'я користувача" required>
             </div>
-
-            <!-- Поле для email -->
             <div class="form-group">
-                <input type="email" name="email" placeholder="Enter your email" required>
-                {% if error_email %}
-                    <p class="error-message">{{ error_email }}</p>
-                {% endif %}
+                <input type="email" name="email" placeholder="Введіть вашу електронну пошту" required>
             </div>
-
-            <!-- Поле для пароля -->
             <div class="form-group">
-                <input type="password" name="password" placeholder="Enter your password" required>
-                {% if error_password %}
-                    <p class="error-message">{{ error_password }}</p>
-                {% endif %}
+                <input type="password" name="password" placeholder="Введіть ваш пароль" required>
             </div>
-
-            <!-- Кнопка реєстрації -->
-            <button type="submit" class="register-button">Register</button>
-
-            <p class="login-link"><a href="{{ url_for('login') }}">Already have an account? Log In</a></p>
+            <button type="submit" class="register-button">Зареєструватися</button>
+            <p class="login-link"><a href="{{ url_for('login') }}">Вже маєте акаунт? Увійти</a></p>
         </form>
     </main>
 </body>

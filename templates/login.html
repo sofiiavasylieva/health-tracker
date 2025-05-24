@@ -2,37 +2,39 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Login</title>
+    <title>Login - Health Tracker</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/indicators.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/calculators.css') }}">
 </head>
 <body>
     <header>
         <h1>Health Tracker</h1>
     </header>
     <main>
+        {% with messages = get_flashed_messages(with_categories=True) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
         <form method="post" action="/login" class="login-form">
-            <h1>Log In</h1>
-
-            <!-- Поле для email -->
+            <h1>Вхід</h1>
             <div class="form-group">
-                <input type="email" name="email" placeholder="Enter your email" required>
+                <input type="email" name="email" placeholder="Введіть вашу електронну пошту" required>
                 {% if error_email %}
                     <p class="error-message">{{ error_email }}</p>
                 {% endif %}
             </div>
-
-            <!-- Поле для пароля -->
             <div class="form-group">
-                <input type="password" name="password" placeholder="Enter your password" required>
+                <input type="password" name="password" placeholder="Введіть ваш пароль" required>
                 {% if error_password %}
                     <p class="error-message">{{ error_password }}</p>
                 {% endif %}
             </div>
-
-            <!-- Кнопка входу -->
-            <button type="submit" class="login-button">Log In</button>
-
-            <p class="register-link"><a href="{{ url_for('register') }}">Don't have an account? Register</a></p>
+            <button type="submit" class="login-button">Увійти</button>
+            <p class="register-link"><a href="{{ url_for('register') }}">Немає акаунта? Зареєструватися</a></p>
         </form>
     </main>
 </body>
