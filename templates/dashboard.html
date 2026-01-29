@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="header">
+    <h1 class="page-title">Аналітичний Дашборд</h1>
+</div>
+
+<div class="card" style="background: linear-gradient(45deg, #4e73df, #224abe); color: white;">
+    <h3>Аналіз показників(Beta)</h3>
+    <p>На основі ваших останніх даних, ваш рівень активності зріс на 15%. Рекомендуємо збільшити споживання води сьогодні.</p>
+</div>
+
+<div class="grid-container">
+    <div class="card">
+        <h3>Динаміка Ваги</h3>
+        {% if chart_data['weight'] %}
+            <img src="data:image/png;base64,{{ chart_data['weight'] }}" style="width: 100%;">
+        {% else %}
+            <p style="color: gray; text-align: center; padding: 50px;">Немає даних. Додайте вимірювання у Трекері.</p>
+        {% endif %}
+    </div>
+
+    <div class="card">
+        <h3>Серцевий ритм</h3>
+        {% if chart_data['pulse'] %}
+            <img src="data:image/png;base64,{{ chart_data['pulse'] }}" style="width: 100%;">
+        {% else %}
+            <p style="color: gray; text-align: center; padding: 50px;">Немає даних.</p>
+        {% endif %}
+    </div>
+
+     <div class="card">
+        <h3>Якість Сну</h3>
+        {% if chart_data['sleep'] %}
+            <img src="data:image/png;base64,{{ chart_data['sleep'] }}" style="width: 100%;">
+        {% else %}
+            <p style="color: gray; text-align: center; padding: 50px;">Немає даних.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

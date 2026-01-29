@@ -1,38 +1,57 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="uk">
 <head>
     <meta charset="UTF-8">
-    <title>Register - Health Tracker</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/indicators.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/calculators.css') }}">
+    <title>Реєстрація - Health Tracker</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/modern.css') }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
-<body>
-    <header>
-        <h1>Health Tracker</h1>
-    </header>
-    <main>
+<body class="auth-page">
+
+    <div class="auth-card">
+        <div class="auth-header">
+            <div class="brand" style="justify-content: center; font-size: 2rem; margin-bottom: 10px;">
+                <i class="fas fa-heartbeat"></i> Health Tracker
+            </div>
+            <h1>Створити акаунт</h1>
+            <p>Почніть свій шлях до здоров'я сьогодні</p>
+        </div>
+
         {% with messages = get_flashed_messages(with_categories=True) %}
             {% if messages %}
                 {% for category, message in messages %}
-                    <div class="flash-{{ category }}">{{ message }}</div>
+                    <div class="flash-message {{ category }}">
+                        {{ message }}
+                    </div>
                 {% endfor %}
             {% endif %}
         {% endwith %}
-        <form method="post" action="/register" class="register-form">
-            <h1>Реєстрація</h1>
+
+        <form method="POST" action="/register">
             <div class="form-group">
-                <input type="text" name="username" placeholder="Введіть ваше ім'я користувача" required>
+                <label>Ім'я користувача</label>
+                <input type="text" name="username" class="form-control" placeholder="Ваше ім'я" required>
             </div>
+
             <div class="form-group">
-                <input type="email" name="email" placeholder="Введіть вашу електронну пошту" required>
+                <label> Email</label>
+                <input type="email" name="email" class="form-control" placeholder="example@mail.com" required>
             </div>
+
             <div class="form-group">
-                <input type="password" name="password" placeholder="Введіть ваш пароль" required>
+                <label> Пароль</label>
+                <input type="password" name="password" class="form-control" placeholder="Мінімум 8 символів" required>
             </div>
-            <button type="submit" class="register-button">Зареєструватися</button>
-            <p class="login-link"><a href="{{ url_for('login') }}">Вже маєте акаунт? Увійти</a></p>
+
+            <button type="submit" class="btn-primary">
+                Зареєструватися
+            </button>
         </form>
-    </main>
+
+        <div class="auth-footer">
+            Вже є акаунт? <a href="{{ url_for('login') }}">Увійти</a>
+        </div>
+    </div>
+
 </body>
 </html>

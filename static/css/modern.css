@@ -1,0 +1,350 @@
+:root {
+    --dark-bg: #031725;        
+    --primary-dark: #022E5B;  
+    --primary: #499BED;      
+    --secondary: #A1C6F6;      
+    --light-bg: #DAEAFF;    
+    
+    --white: #ffffff;
+    --text-dark: #1a202c;      
+    --text-muted: #718096;  
+    --success: #22c55e; 
+    --success-bg: #dcfce7;    
+    --success-text: #166534;   
+    --error: #ef4444;       
+
+    /* --- Компоненти --- */
+    --radius: 16px;
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --font-sans: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+}
+
+body {
+    font-family: var(--font-sans);
+    background: linear-gradient(135deg, var(--dark-bg) 0%, #022241 100%);
+    margin: 0;
+    display: flex;
+    height: 100vh;
+    color: var(--text-dark);
+    overflow: hidden; 
+}
+
+.sidebar {
+    width: 280px;
+    background: linear-gradient(180deg, var(--primary-dark) 0%, var(--dark-bg) 100%);
+    color: var(--white);
+    display: flex;
+    flex-direction: column;
+    padding: 25px;
+    box-shadow: var(--shadow-lg);
+}
+
+.brand {
+    font-size: 1.75rem;
+    font-weight: 800;
+    margin-bottom: 50px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--secondary);
+}
+
+/* Стилі для посилань меню */
+.nav-link {
+    display: flex;
+    align-items: center;
+    padding: 14px 18px;
+    color: var(--secondary);
+    text-decoration: none;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border-radius: 12px;
+    margin-bottom: 10px;
+    transition: all 0.3s ease;
+}
+
+.nav-link i {
+    margin-right: 12px;
+    width: 24px;
+    text-align: center;
+}
+
+/* Ефекти наведення та активного пункту */
+.nav-link:hover {
+    background: rgba(161, 198, 246, 0.1);
+    color: var(--white);
+}
+
+.nav-link.active {
+    background: var(--primary); 
+    color: var(--white);
+    box-shadow: var(--shadow-sm);
+}
+
+/* Кнопка виходу */
+.nav-link.logout {
+    margin-top: auto;
+    background: rgba(239, 68, 68, 0.15); 
+    color: #fca5a5;
+}
+.nav-link.logout:hover {
+    background: var(--error);
+    color: var(--white);
+}
+
+.main-content {
+    flex: 1;
+    padding: 40px;
+    overflow-y: auto; /* Скрол тільки тут */
+    /* Фон для контенту - світлий, щоб картки виділялися */
+    background-color: #f8fafc; 
+}
+
+/* Заголовок сторінки */
+.header {
+    margin-bottom: 35px;
+}
+.page-title {
+    font-size: 2.2rem;
+    color: var(--primary-dark);
+    font-weight: 800;
+    letter-spacing: -0.025em;
+}
+
+/* ==================== Картки та Сітка ==================== */
+.card {
+    /* Використовуємо найсвітліший колір з палітри для фону карток */
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 30px;
+    box-shadow: var(--shadow-lg);
+    border: 1px solid rgba(161, 198, 246, 0.2); /* Легка рамка кольору secondary */
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.card:hover {
+    transform: translateY(-4px); /* Ефект підняття */
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+}
+
+/* Заголовки в картках */
+.card h3 {
+    margin-top: 0;
+    margin-bottom: 25px;
+    font-size: 1.4rem;
+    color: var(--primary-dark);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.card h3 i {
+    color: var(--primary); /* Іконки в заголовках карток */
+}
+
+.grid-container {
+    margin-top: 40px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+    gap: 30px;
+}
+
+/* ==================== Форми та Кнопки (ОНОВЛЕНО) ==================== */
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--primary-dark);
+    font-weight: 700;
+    font-size: 0.95rem;
+}
+
+.form-control {
+    width: 100%;
+    padding: 14px 16px;
+    border: 2px solid #e2e8f0; /* Світло-сіра рамка */
+    border-radius: 12px;
+    background: #f8fafc;
+    font-size: 1rem;
+    color: var(--text-dark);
+    transition: all 0.2s ease-in-out; /* Плавна анімація */
+    box-sizing: border-box;
+}
+
+/* ПІДСВІЧУВАННЯ ПРИ НАТИСКАННІ */
+.form-control:focus {
+    outline: none;
+    border-color: var(--primary); /* Яскрава рамка */
+    background: var(--white);
+    /* Ефект світіння (тінь кольору primary) */
+    box-shadow: 0 0 0 4px rgba(73, 155, 237, 0.15); 
+}
+
+.btn-primary {
+    background: var(--primary);
+    color: var(--white);
+    border: none;
+    padding: 16px 30px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 1.1rem;
+    font-weight: 700;
+    width: 100%;
+    transition: background 0.3s ease, transform 0.1s;
+    box-shadow: 0 4px 6px -1px rgba(73, 155, 237, 0.3);
+}
+
+.btn-primary:hover {
+    background: #3b8ddb; /* Трохи темніший primary */
+}
+.btn-primary:active {
+    transform: scale(0.98); /* Ефект натискання */
+}
+
+/* ==================== Результати (ВІДПОВІДІ) ==================== */
+/* Це той стиль, який ти просив: зелений блок для результату */
+.result-box {
+    margin-top: 20px;
+    padding: 16px;
+    background: var(--success-bg); /* Світло-зелений фон */
+    color: var(--success-text);    /* Темно-зелений текст */
+    border-radius: 12px;
+    font-weight: 700;
+    text-align: center;
+    border: 1px solid #bbf7d0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ==================== Flash Messages (Повідомлення) ==================== */
+.flash-message {
+    padding: 16px 20px;
+    margin-bottom: 25px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    font-weight: 600;
+    font-size: 1rem;
+    border: none !important; 
+}
+
+.flash-message.error {
+    background-color: #fef2f2;
+    color: var(--error);
+    box-shadow: 0 1px 2px 0 rgba(239, 68, 68, 0.1);
+}
+
+.flash-message.success {
+    background-color: #f0fdf4;
+    color: var(--success);
+    box-shadow: 0 1px 2px 0 rgba(34, 197, 94, 0.1);
+}
+
+/* ==================== UI Асистент (Чат) ==================== */
+.chat-box {
+    height: 500px;
+    background: #f8fafc;
+    border-radius: 16px;
+    padding: 25px;
+    border: 2px solid #e2e8f0;
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+}
+
+.message {
+    padding: 14px 20px;
+    border-radius: 18px;
+    margin-bottom: 15px;
+    max-width: 75%;
+    font-size: 1rem;
+    line-height: 1.5;
+    box-shadow: var(--shadow-sm);
+}
+
+.message.ai {
+    background: var(--white);
+    color: var(--text-dark);
+    align-self: flex-start;
+    border-bottom-left-radius: 4px;
+    border: 1px solid #e2e8f0;
+}
+
+.message.user {
+    background: var(--primary);
+    color: var(--white);
+    align-self: flex-end;
+    border-bottom-right-radius: 4px;
+}
+/* ==================== LOGIN / REGISTER PAGE ==================== */
+/* Спеціальний клас для body на сторінці входу */
+body.auth-page {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    height: 100vh;
+    background: linear-gradient(135deg, var(--dark-bg) 0%, #0f172a 100%);
+}
+
+/* Обмежувач ширини для картки входу */
+.auth-card {
+    width: 100%;
+    max-width: 420px;
+    background: var(--white);
+    border-radius: 20px; /* Трохи більше заокруглення */
+    padding: 40px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    animation: slideUp 0.5s ease-out;
+}
+
+.auth-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.auth-header h1 {
+    font-size: 1.8rem;
+    color: var(--primary-dark);
+    margin-bottom: 10px;
+}
+
+.auth-header p {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+}
+
+.auth-footer {
+    text-align: center;
+    margin-top: 25px;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+}
+
+.auth-footer a {
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.auth-footer a:hover {
+    text-decoration: underline;
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
