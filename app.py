@@ -458,7 +458,6 @@ class HealthTrackerApp:
         # Заливка під графіком
         plt.fill_between(dates, values, color=color, alpha=0.1)
         
-        # Стилізація сітки та рамок
         plt.grid(axis='y', linestyle='--', alpha=0.3, color='#94a3b8')
         plt.grid(axis='x', visible=False)
         ax.spines['top'].set_visible(False)
@@ -466,19 +465,15 @@ class HealthTrackerApp:
         ax.spines['left'].set_visible(False)
         ax.spines['bottom'].set_color('#cbd5e1')
         
-        # Заголовок (один раз!)
         plt.title(ylabel, fontsize=14, fontweight='bold', color='#1e293b', loc='left', pad=15)
         
-        # Форматування дат (День.Місяць)
         import matplotlib.dates as mdates
         ax.xaxis.set_major_formatter(mdates.DateFormatter('%d.%m'))
         plt.xticks(fontsize=10, color='#64748b')
         plt.yticks(fontsize=10, color='#64748b')
         
-        # Прибираємо зайві засічки
         ax.tick_params(axis='both', which='both', length=0)
 
-        # Збереження
         buf = io.BytesIO()
         plt.tight_layout()
         plt.savefig(buf, format='png', transparent=True, dpi=100)
