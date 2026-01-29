@@ -96,8 +96,7 @@ body {
 .main-content {
     flex: 1;
     padding: 40px;
-    overflow-y: auto; /* Скрол тільки тут */
-    /* Фон для контенту - світлий, щоб картки виділялися */
+    overflow-y: auto; 
     background-color: #f8fafc; 
 }
 
@@ -112,18 +111,17 @@ body {
     letter-spacing: -0.025em;
 }
 
-/* ==================== Картки та Сітка ==================== */
+/*  Картки та Сітка  */
 .card {
-    /* Використовуємо найсвітліший колір з палітри для фону карток */
     background: var(--white);
     border-radius: var(--radius);
     padding: 30px;
     box-shadow: var(--shadow-lg);
-    border: 1px solid rgba(161, 198, 246, 0.2); /* Легка рамка кольору secondary */
+    border: 1px solid rgba(161, 198, 246, 0.2); 
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 .card:hover {
-    transform: translateY(-4px); /* Ефект підняття */
+    transform: translateY(-4px); 
     box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
 }
 
@@ -138,7 +136,7 @@ body {
     gap: 10px;
 }
 .card h3 i {
-    color: var(--primary); /* Іконки в заголовках карток */
+    color: var(--primary); 
 }
 
 .grid-container {
@@ -148,7 +146,7 @@ body {
     gap: 30px;
 }
 
-/* ==================== Форми та Кнопки (ОНОВЛЕНО) ==================== */
+/*  Форми та Кнопки */
 .form-group {
     margin-bottom: 20px;
 }
@@ -164,21 +162,19 @@ body {
 .form-control {
     width: 100%;
     padding: 14px 16px;
-    border: 2px solid #e2e8f0; /* Світло-сіра рамка */
+    border: 2px solid #e2e8f0; 
     border-radius: 12px;
     background: #f8fafc;
     font-size: 1rem;
     color: var(--text-dark);
-    transition: all 0.2s ease-in-out; /* Плавна анімація */
+    transition: all 0.2s ease-in-out; 
     box-sizing: border-box;
 }
 
-/* ПІДСВІЧУВАННЯ ПРИ НАТИСКАННІ */
 .form-control:focus {
     outline: none;
-    border-color: var(--primary); /* Яскрава рамка */
+    border-color: var(--primary);
     background: var(--white);
-    /* Ефект світіння (тінь кольору primary) */
     box-shadow: 0 0 0 4px rgba(73, 155, 237, 0.15); 
 }
 
@@ -197,19 +193,18 @@ body {
 }
 
 .btn-primary:hover {
-    background: #3b8ddb; /* Трохи темніший primary */
+    background: #3b8ddb; 
 }
 .btn-primary:active {
-    transform: scale(0.98); /* Ефект натискання */
+    transform: scale(0.98); 
 }
 
-/* ==================== Результати (ВІДПОВІДІ) ==================== */
-/* Це той стиль, який ти просив: зелений блок для результату */
+/*  Результати (ВІДПОВІДІ)  */
 .result-box {
     margin-top: 20px;
     padding: 16px;
-    background: var(--success-bg); /* Світло-зелений фон */
-    color: var(--success-text);    /* Темно-зелений текст */
+    background: var(--success-bg); 
+    color: var(--success-text);  
     border-radius: 12px;
     font-weight: 700;
     text-align: center;
@@ -226,7 +221,7 @@ body {
     to { opacity: 1; transform: translateY(0); }
 }
 
-/* ==================== Flash Messages (Повідомлення) ==================== */
+/*  Flash Messages (Повідомлення)  */
 .flash-message {
     padding: 16px 20px;
     margin-bottom: 25px;
@@ -251,7 +246,7 @@ body {
     box-shadow: 0 1px 2px 0 rgba(34, 197, 94, 0.1);
 }
 
-/* ==================== UI Асистент (Чат) ==================== */
+/*  UI Асистент (Чат)  */
 .chat-box {
     height: 500px;
     background: #f8fafc;
@@ -288,8 +283,7 @@ body {
     align-self: flex-end;
     border-bottom-right-radius: 4px;
 }
-/* ==================== LOGIN / REGISTER PAGE ==================== */
-/* Спеціальний клас для body на сторінці входу */
+
 body.auth-page {
     display: flex;
     align-items: center;
@@ -299,12 +293,12 @@ body.auth-page {
     background: linear-gradient(135deg, var(--dark-bg) 0%, #0f172a 100%);
 }
 
-/* Обмежувач ширини для картки входу */
+
 .auth-card {
     width: 100%;
     max-width: 420px;
     background: var(--white);
-    border-radius: 20px; /* Трохи більше заокруглення */
+    border-radius: 20px; 
     padding: 40px;
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
     border: 1px solid rgba(255, 255, 255, 0.1);
