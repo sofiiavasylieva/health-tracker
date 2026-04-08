@@ -1,40 +1,114 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="header">
-    <h1 class="page-title">Аналітичний Дашборд</h1>
+
+<div class="page-header flex-center justify-between">
+    <div>
+        <div class="page-title">Дашборд</div>
+        <div class="page-subtitle">Привіт, {{ username }}! Ось твої показники.</div>
+    </div>
+    <a href="{{ url_for('tracker') }}" class="btn btn-primary btn-sm">
+        <i class="fas fa-plus"></i> Додати дані
+    </a>
 </div>
 
-<div class="card" style="background: linear-gradient(45deg, #4e73df, #224abe); color: white;">
-    <h3>Аналіз показників</h3>
-    <p>На основі ваших останніх даних, ваш рівень активності зріс на 15%. Рекомендуємо збільшити споживання води сьогодні.</p>
-</div>
+{% with messages = get_flashed_messages(with_categories=True) %}
+    {% for category, message in messages %}
+        <div class="alert alert-{{ 'success' if category == 'success' else 'error' }}">
+            <i class="fas fa-{% if category == 'success' %}check-circle{% else %}exclamation-circle{% endif %}"></i>
+            {{ message }}
+        </div>
+    {% endfor %}
+{% endwith %}
 
-<div class="grid-container">
+<!-- Recommendation card -->
+{% if latest_rec %}
+<div class="card mb-16" style="border-left: 4px solid var(--emerald); background: linear-gradient(135deg, rgba(16,185,129,0.04), var(--surface));">
+    <div class="flex-center gap-12 mb-8">
+        <span class="badge badge-emerald"><i class="fas fa-lightbulb"></i> Рекомендація</span>
+        <span style="font-size:0.75rem; color: var(--text-3);">Rule-based аналіз</span>
+    </div>
+    <div style="font-size: 0.92rem; color: var(--text); line-height: 1.6;">{{ latest_rec[0] }}</div>
+</div>
+{% endif %}
+
+<!-- Charts grid -->
+<div class="section-label"><i class="fas fa-chart-line" style="color: var(--indigo);"></i> Динаміка показників</div>
+<div class="grid-auto">
+
     <div class="card">
-        <h3>Динаміка Ваги</h3>
+        <div class="flex-center justify-between mb-8">
+            <div class="card-title">Вага</div>
+            <span class="badge badge-indigo"><i class="fas fa-weight"></i> кг</span>
+        </div>
         {% if chart_data['weight'] %}
-            <img src="data:image/png;base64,{{ chart_data['weight'] }}" style="width: 100%;">
+            <img src="data:image/png;base64,{{ chart_data['weight'] }}" style="width:100%; border-radius: 8px;">
         {% else %}
-            <p style="color: gray; text-align: center; padding: 50px;">Немає даних. Додайте вимірювання у Трекері.</p>
+            <div style="text-align:center; padding: 40px 0; color: var(--text-3); font-size: 0.88rem;">
+                <i class="fas fa-chart-line" style="font-size: 2rem; opacity: 0.3; display:block; margin-bottom:10px;"></i>
+                Додай вагу у Трекері
+            </div>
         {% endif %}
     </div>
 
     <div class="card">
-        <h3>Серцевий ритм</h3>
+        <div class="flex-center justify-between mb-8">
+            <div class="card-title">Пульс</div>
+            <span class="badge badge-rose"><i class="fas fa-heartbeat"></i> уд/хв</span>
+        </div>
         {% if chart_data['pulse'] %}
-            <img src="data:image/png;base64,{{ chart_data['pulse'] }}" style="width: 100%;">
+            <img src="data:image/png;base64,{{ chart_data['pulse'] }}" style="width:100%; border-radius: 8px;">
         {% else %}
-            <p style="color: gray; text-align: center; padding: 50px;">Немає даних.</p>
+            <div style="text-align:center; padding: 40px 0; color: var(--text-3); font-size: 0.88rem;">
+                <i class="fas fa-heartbeat" style="font-size: 2rem; opacity: 0.3; display:block; margin-bottom:10px;"></i>
+                Немає даних
+            </div>
         {% endif %}
     </div>
 
-     <div class="card">
-        <h3>Якість Сну</h3>
+    <div class="card">
+        <div class="flex-center justify-between mb-8">
+            <div class="card-title">Сон</div>
+            <span class="badge" style="background:rgba(139,92,246,0.1);color:var(--violet);"><i class="fas fa-moon"></i> год</span>
+        </div>
         {% if chart_data['sleep'] %}
-            <img src="data:image/png;base64,{{ chart_data['sleep'] }}" style="width: 100%;">
+            <img src="data:image/png;base64,{{ chart_data['sleep'] }}" style="width:100%; border-radius: 8px;">
         {% else %}
-            <p style="color: gray; text-align: center; padding: 50px;">Немає даних.</p>
+            <div style="text-align:center; padding: 40px 0; color: var(--text-3); font-size: 0.88rem;">
+                <i class="fas fa-moon" style="font-size: 2rem; opacity: 0.3; display:block; margin-bottom:10px;"></i>
+                Немає даних
+            </div>
         {% endif %}
     </div>
+
+    <div class="card">
+        <div class="flex-center justify-between mb-8">
+            <div class="card-title">Вода</div>
+            <span class="badge" style="background:rgba(6,182,212,0.1);color:var(--cyan);"><i class="fas fa-tint"></i> л</span>
+        </div>
+        {% if chart_data['water_intake'] %}
+            <img src="data:image/png;base64,{{ chart_data['water_intake'] }}" style="width:100%; border-radius: 8px;">
+        {% else %}
+            <div style="text-align:center; padding: 40px 0; color: var(--text-3); font-size: 0.88rem;">
+                <i class="fas fa-tint" style="font-size: 2rem; opacity: 0.3; display:block; margin-bottom:10px;"></i>
+                Немає даних
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="card">
+        <div class="flex-center justify-between mb-8">
+            <div class="card-title">Кроки</div>
+            <span class="badge badge-emerald"><i class="fas fa-shoe-prints"></i></span>
+        </div>
+        {% if chart_data['steps'] %}
+            <img src="data:image/png;base64,{{ chart_data['steps'] }}" style="width:100%; border-radius: 8px;">
+        {% else %}
+            <div style="text-align:center; padding: 40px 0; color: var(--text-3); font-size: 0.88rem;">
+                <i class="fas fa-walking" style="font-size: 2rem; opacity: 0.3; display:block; margin-bottom:10px;"></i>
+                Немає даних
+            </div>
+        {% endif %}
+    </div>
+
 </div>
 {% endblock %}

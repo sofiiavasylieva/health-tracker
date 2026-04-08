@@ -1,231 +1,267 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="header">
-    <h1 class="page-title">Трекер та Інструменти</h1>
+
+<div class="page-header">
+    <div class="page-title">Трекер</div>
+    <div class="page-subtitle">Вноси щоденні показники та використовуй калькулятори</div>
 </div>
 
 {% with messages = get_flashed_messages(with_categories=True) %}
-    {% if messages %}
-        {% for category, message in messages %}
-            <div class="card flash-message {{ category }}">
-                <i class="fas {% if category=='error' %}fa-exclamation-circle{% else %}fa-check-circle{% endif %}"></i>
-                {{ message }}
-            </div>
-        {% endfor %}
-    {% endif %}
+    {% for category, message in messages %}
+        <div class="alert alert-{{ 'success' if category == 'success' else 'error' }}">
+            <i class="fas fa-{% if category == 'success' %}check-circle{% else %}exclamation-circle{% endif %}"></i>
+            {{ message }}
+        </div>
+    {% endfor %}
 {% endwith %}
 
-<h2 style="margin-bottom: 20px; color: var(--dark); border-bottom: 2px solid #e3e6f0; padding-bottom: 10px;">Внесення показників</h2>
+<!-- Tabs -->
+<div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('data', this)">
+        <i class="fas fa-calendar-day"></i> Щоденні дані
+    </button>
+    <button class="tab-btn" onclick="switchTab('calc', this)">
+        <i class="fas fa-calculator"></i> Калькулятори
+    </button>
+</div>
 
-<div class="grid-container" style="margin-bottom: 40px;">
-    <div class="card">
-        <h3><i class="fas fa-heartbeat" style="color: #e74a3b;"></i> Дані здоров'я</h3>
-        <form method="POST" action="/tracker">
-            <input type="hidden" name="form_type" value="health_data">
-            
-            <div class="form-group">
-                <label>Дата</label>
-                <input type="date" name="date" required class="form-control">
-            </div>
-            <div class="form-group">
-                <label>Пульс (уд/хв)</label>
-                <input type="number" name="pulse" class="form-control" placeholder="60">
-            </div>
-            <div class="form-group">
-                <label>Тиск (120/80)</label>
-                <input type="text" name="blood_pressure" class="form-control" placeholder="120/80">
-            </div>
-            <div class="form-group">
-                <label>Сон (годин)</label>
-                <input type="number" step="0.1" name="duration_sleep" class="form-control" placeholder="8.0">
-            </div>
-            <button type="submit" class="btn-primary">Зберегти показники</button>
-        </form>
-    </div>
+<!-- Tab: Daily data -->
+<div id="tab-data" class="tab-content">
+    <div class="grid-3">
 
-    <div class="card">
-        <h3><i class="fas fa-weight"></i> Вага та виміри</h3>
-        <form method="POST" action="/tracker">
-            <input type="hidden" name="form_type" value="basic_data">
-            
-            <div class="form-group">
-                <label>Дата</label>
-                <input type="date" name="date" required class="form-control">
+        <div class="card">
+            <div class="card-section-title">
+                <i class="fas fa-weight" style="color:var(--indigo);"></i> Вага та кроки
             </div>
-            
-            <div class="form-group">
-                <label>Вага (кг)</label>
-                <input type="number" step="0.1" name="weight" class="form-control" placeholder="70.5" required>
-            </div>
-
-            <div class="form-group">
-                <label>Зріст (см)</label>
-                <input type="number" name="height" class="form-control" placeholder="175" required>
-            </div>
-
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+            <form method="POST" action="/tracker">
+                <input type="hidden" name="form_type" value="daily_data">
                 <div class="form-group">
-                    <label>Вік</label>
-                    <input type="number" name="age" class="form-control" placeholder="25">
+                    <label class="form-label">Дата</label>
+                    <input type="date" name="date" class="form-control" required>
                 </div>
                 <div class="form-group">
-                    <label>Стать</label>
-                    <select name="gender" class="form-control">
-                        <option value="male">Чол.</option>
-                        <option value="female">Жін.</option>
+                    <label class="form-label">Вага (кг)</label>
+                    <input type="number" name="weight" class="form-control" step="0.1" placeholder="70.5">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Кроки</label>
+                    <input type="number" name="steps" class="form-control" placeholder="8000">
+                </div>
+                <button type="submit" class="btn btn-primary btn-full">Зберегти</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <div class="card-section-title">
+                <i class="fas fa-heartbeat" style="color:var(--rose);"></i> Здоров'я
+            </div>
+            <form method="POST" action="/tracker">
+                <input type="hidden" name="form_type" value="health_data">
+                <div class="form-group">
+                    <label class="form-label">Дата</label>
+                    <input type="date" name="date" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Пульс (уд/хв)</label>
+                    <input type="number" name="pulse" class="form-control" placeholder="72">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Тиск</label>
+                    <input type="text" name="blood_pressure" class="form-control" placeholder="120/80">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Сон (год)</label>
+                    <input type="number" name="duration_sleep" class="form-control" step="0.5" placeholder="8.0">
+                </div>
+                <button type="submit" class="btn btn-primary btn-full">Зберегти</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <div class="card-section-title">
+                <i class="fas fa-running" style="color:var(--emerald);"></i> Активність
+            </div>
+            <form method="POST" action="/tracker">
+                <input type="hidden" name="form_type" value="activity_data">
+                <div class="form-group">
+                    <label class="form-label">Дата</label>
+                    <input type="date" name="date" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Тип</label>
+                    <select name="activity_type" class="form-control">
+                        <option value="walking">🚶 Ходьба</option>
+                        <option value="running">🏃 Біг</option>
+                        <option value="gym">🏋️ Зал</option>
+                        <option value="cycling">🚴 Велосипед</option>
+                        <option value="swimming">🏊 Плавання</option>
+                        <option value="yoga">🧘 Йога</option>
                     </select>
                 </div>
-            </div>
+                <div class="form-group">
+                    <label class="form-label">Тривалість (хв)</label>
+                    <input type="number" name="duration" class="form-control" placeholder="45">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Вода (л)</label>
+                    <input type="number" name="water_intake" class="form-control" step="0.1" placeholder="2.0">
+                </div>
+                <button type="submit" class="btn btn-primary btn-full">Зберегти</button>
+            </form>
+        </div>
 
-            <button type="submit" class="btn-primary">Зберегти вагу</button>
-        </form>
-
-    </div>
-    <div class="card">
-        <h3><i class="fas fa-running" style="color: #1cc88a;"></i> Активність</h3>
-        <form method="POST" action="/tracker">
-            <input type="hidden" name="form_type" value="activity_data">
-            
-            <div class="form-group">
-                <label>Дата</label>
-                <input type="date" name="date" required class="form-control">
-            </div>
-            <div class="form-group">
-                <label>Тип активності</label>
-                <select name="activity_type" class="form-control">
-                    <option value="walking">Ходьба</option>
-                    <option value="running">Біг</option>
-                    <option value="gym">Зал</option>
-                    <option value="cycling">Велосипед</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Тривалість (хв)</label>
-                <input type="number" name="duration" class="form-control" placeholder="30">
-            </div>
-            <div class="form-group">
-                <label>Вода (літрів)</label>
-                <input type="number" step="0.1" name="water_intake" class="form-control" placeholder="1.5">
-            </div>
-            <button type="submit" class="btn-primary">Зберегти активність</button>
-        </form>
     </div>
 </div>
 
-<h2 style="margin-bottom: 20px; color: var(--dark); border-bottom: 2px solid #e3e6f0; padding-bottom: 10px;">
-    <i class="fas fa-calculator"></i> Калькулятори здоров'я
-</h2>
+<!-- Tab: Calculators -->
+<div id="tab-calc" class="tab-content" style="display:none;">
+    <div class="grid-2" style="max-width: 760px;">
 
-<div class="grid-container">
-    
-    <div class="card">
-        <h3>Калькулятор ІМТ</h3>
-        <form action="/tracker" method="POST">
-            <input type="hidden" name="form_type" value="calculator">
-            <input type="hidden" name="calculator_type" value="bmi">
-            
-            <div class="form-group">
-                <label for="weight">Вага (кг):</label>
-                <input type="number" class="form-control" name="weight" id="weight" step="0.1" required>
+        <div class="card">
+            <div class="card-section-title">
+                <i class="fas fa-weight" style="color:var(--indigo);"></i> Індекс маси тіла
             </div>
-            <div class="form-group">
-                <label for="height">Зріст (см):</label>
-                <input type="number" class="form-control" name="height" id="height" step="0.1" required>
-            </div>
-            <button type="submit" class="btn-primary">Розрахувати ІМТ</button>
-        </form>
-        
-        {% if bmi_result is not none %}
+            <form method="POST" action="/tracker">
+                <input type="hidden" name="form_type" value="calculator">
+                <input type="hidden" name="calculator_type" value="bmi">
+                <div class="form-group">
+                    <label class="form-label">Вага (кг)</label>
+                    <input type="number" name="weight" class="form-control" step="0.1" required placeholder="70">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Зріст (см)</label>
+                    <input type="number" name="height" class="form-control" step="0.1" required placeholder="175">
+                </div>
+                <button type="submit" class="btn btn-primary btn-full">Розрахувати</button>
+            </form>
+            {% if bmi_result is not none %}
             <div class="result-box">
-                <i class="fas fa-check-circle"></i> Ваш ІМТ: {{ bmi_result }}
+                <i class="fas fa-check-circle"></i>
+                ІМТ: <strong>{{ bmi_result }}</strong>
+                <span style="font-size:0.85rem; color:var(--text-2); font-weight:400; margin-left:6px;">
+                    {% if bmi_result < 18.5 %}— недостатня вага
+                    {% elif bmi_result < 25 %}— норма ✓
+                    {% elif bmi_result < 30 %}— надмірна вага
+                    {% else %}— ожиріння{% endif %}
+                </span>
             </div>
-        {% endif %}
-    </div>
+            {% endif %}
+        </div>
 
-    <div class="card">
-        <h3>Відсоток жиру</h3>
-        <form action="/tracker" method="POST">
-            <input type="hidden" name="form_type" value="calculator">
-            <input type="hidden" name="calculator_type" value="body_fat">
-            
-            <div class="form-group">
-                <label for="gender">Стать:</label>
-                <select name="gender" id="gender" class="form-control" required>
-                    <option value="male">Чоловік</option>
-                    <option value="female">Жінка</option>
-                </select>
+        <div class="card">
+            <div class="card-section-title">
+                <i class="fas fa-fire" style="color:var(--amber);"></i> Норма калорій (TDEE)
             </div>
-            <div class="form-group">
-                <label for="age">Вік:</label>
-                <input type="number" name="age" id="age" class="form-control" required>
-            </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                <div class="form-group">
-                    <label>Груди (см):</label>
-                    <input type="number" name="chest" class="form-control" required>
+            <form method="POST" action="/tracker">
+                <input type="hidden" name="form_type" value="calculator">
+                <input type="hidden" name="calculator_type" value="calories">
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label class="form-label">Стать</label>
+                        <select name="gender" class="form-control">
+                            <option value="male">Чол.</option>
+                            <option value="female">Жін.</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Вік</label>
+                        <input type="number" name="age" class="form-control" placeholder="25" required>
+                    </div>
+                </div>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label class="form-label">Вага (кг)</label>
+                        <input type="number" name="weight" class="form-control" required placeholder="70">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Зріст (см)</label>
+                        <input type="number" name="height" class="form-control" required placeholder="175">
+                    </div>
                 </div>
                 <div class="form-group">
-                    <label>Живіт (см):</label>
-                    <input type="number" name="abdomen" class="form-control" required>
+                    <label class="form-label">Активність</label>
+                    <select name="activity_level" class="form-control">
+                        <option value="1.2">Мінімальна</option>
+                        <option value="1.375">Легка</option>
+                        <option value="1.55" selected>Помірна</option>
+                        <option value="1.725">Висока</option>
+                        <option value="1.9">Дуже висока</option>
+                    </select>
                 </div>
+                <button type="submit" class="btn btn-primary btn-full">Розрахувати</button>
+            </form>
+            {% if calorie_result is not none %}
+            <div class="result-box">
+                <i class="fas fa-check-circle"></i>
+                Норма: <strong>{{ calorie_result }} ккал/день</strong>
             </div>
-            <div class="form-group">
-                <label for="thigh">Стегно (см):</label>
-                <input type="number" name="thigh" id="thigh" class="form-control" required>
-            </div>
-            <button type="submit" class="btn-primary">Розрахувати жир</button>
-        </form>
-        
-        {% if fat_result is not none %}
-            <div style="margin-top: 15px; padding: 10px; background: #e8f5e9; border-radius: 8px; color: #1b5e20; font-weight: bold; text-align: center;">
-                Ваш відсоток жиру: {{ fat_result }}%
-            </div>
-        {% endif %}
-    </div>
+            {% endif %}
+        </div>
 
-    <div class="card">
-        <h3>Калькулятор калорій</h3>
-        <form action="/tracker" method="POST">
-            <input type="hidden" name="form_type" value="calculator">
-            <input type="hidden" name="calculator_type" value="calories">
-            
-            <div class="form-group">
-                <label for="gender-cal">Стать:</label>
-                <select name="gender" id="gender-cal" class="form-control" required>
-                    <option value="male">Чоловік</option>
-                    <option value="female">Жінка</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="weight-cal">Вага (кг):</label>
-                <input type="number" name="weight" id="weight-cal" class="form-control" required>
-            </div>
-            <div class="form-group">
-                <label for="height-cal">Зріст (см):</label>
-                <input type="number" name="height" id="height-cal" class="form-control" required>
-            </div>
-            <div class="form-group">
-                <label for="age-cal">Вік:</label>
-                <input type="number" name="age" id="age-cal" class="form-control" required>
-            </div>
-            <div class="form-group">
-                <label for="activity-level">Активність:</label>
-                <select name="activity_level" id="activity-level" class="form-control" required>
-                    <option value="1.2">Мінімальна</option>
-                    <option value="1.375">Легка</option>
-                    <option value="1.55">Помірна</option>
-                    <option value="1.725">Висока</option>
-                    <option value="1.9">Екстремальна</option>
-                </select>
-            </div>
-            <button type="submit" class="btn-primary">Розрахувати калорії</button>
-        </form>
-        
-        {% if calorie_result is not none %}
-            <div style="margin-top: 15px; padding: 10px; background: #e8f5e9; border-radius: 8px; color: #1b5e20; font-weight: bold; text-align: center;">
-                Норма калорій: {{ calorie_result }} ккал
-            </div>
-        {% endif %}
     </div>
 </div>
+
+<style>
+.tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 24px;
+    background: var(--surface);
+    padding: 6px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    width: fit-content;
+}
+.tab-btn {
+    padding: 9px 20px;
+    border: none;
+    background: transparent;
+    border-radius: 10px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    font-family: var(--font);
+    color: var(--text-2);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+.tab-btn:hover { background: var(--bg); color: var(--text); }
+.tab-btn.active { background: var(--indigo); color: white; }
+.card-section-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+</style>
+
+<div id="tracker-meta"
+     data-show-calc="{{ 'true' if (bmi_result is not none or calorie_result is not none) else 'false' }}">
+</div>
+
+<script>
+function switchTab(name, btn) {
+    document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + name).style.display = 'block';
+    if (btn) btn.classList.add('active');
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('input[type="date"]').forEach(el => {
+        if (!el.value) el.value = new Date().toISOString().split('T')[0];
+    });
+
+    var meta = document.getElementById('tracker-meta');
+    if (meta.dataset.showCalc === 'true') {
+        switchTab('calc', document.querySelectorAll('.tab-btn')[1]);
+    }
+});
+</script>
+
 {% endblock %}

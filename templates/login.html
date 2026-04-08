@@ -2,55 +2,56 @@
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
-    <title>Вхід - Health Tracker</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Вхід — Health Tracker</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/modern.css') }}">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 </head>
-<body class="auth-page"> <div class="auth-card">
-        <div class="auth-header">
-            <div class="brand" style="justify-content: center; font-size: 2rem; margin-bottom: 10px;">
-                <i class="fas fa-heartbeat"></i> Health Tracker
-            </div>
-            <h1>З поверненням!</h1>
-            <p>Введіть дані для входу в систему</p>
-        </div>
+<body class="auth-layout">
 
-        {% with messages = get_flashed_messages(with_categories=True) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="flash-message {{ category }}" style="margin-bottom: 20px;">
-                        <i class="fas fa-info-circle"></i> {{ message }}
-                    </div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-
-        <form method="POST" action="/login">
-            <div class="form-group">
-                <label> Email</label>
-                <input type="email" name="email" class="form-control" placeholder="example@mail.com" required>
-                {% if error_email %}
-                    <div style="color: var(--error); font-size: 0.85rem; margin-top: 5px;">{{ error_email }}</div>
-                {% endif %}
-            </div>
-
-            <div class="form-group">
-                <label> Пароль</label>
-                <input type="password" name="password" class="form-control" placeholder="••••••••" required>
-                {% if error_password %}
-                    <div style="color: var(--error); font-size: 0.85rem; margin-top: 5px;">{{ error_password }}</div>
-                {% endif %}
-            </div>
-
-            <button type="submit" class="btn-primary" style="margin-top: 10px;">
-                Увійти
-            </button>
-        </form>
-
-        <div class="auth-footer">
-            Ще не маєте акаунту? <a href="{{ url_for('register') }}">Зареєструватися</a>
-        </div>
+<div class="auth-card">
+    <div class="auth-brand">
+        <div class="brand-icon" style="width:32px;height:32px;background:linear-gradient(135deg,#6366f1,#8b5cf6);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:0.9rem;">❤️</div>
+        Health Tracker
     </div>
+
+    <div class="auth-title">З поверненням!</div>
+    <div class="auth-sub">Увійди, щоб переглянути свої показники</div>
+
+    {% with messages = get_flashed_messages(with_categories=True) %}
+        {% for category, message in messages %}
+            <div class="alert alert-{{ 'success' if category == 'success' else 'error' }}" style="margin-bottom: 16px;">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endwith %}
+
+    <form method="POST" action="/login">
+        <div class="form-group">
+            <label class="form-label">Email</label>
+            <input type="email" name="email" class="form-control" placeholder="example@mail.com" required>
+            {% if error_email %}
+                <div class="error-hint"><i class="fas fa-exclamation-circle"></i> {{ error_email }}</div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Пароль</label>
+            <input type="password" name="password" class="form-control" placeholder="••••••••" required>
+            {% if error_password %}
+                <div class="error-hint"><i class="fas fa-exclamation-circle"></i> {{ error_password }}</div>
+            {% endif %}
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-full" style="margin-top: 8px;">
+            Увійти <i class="fas fa-arrow-right"></i>
+        </button>
+    </form>
+
+    <div class="auth-footer">
+        Ще немає акаунту? <a href="{{ url_for('register') }}">Зареєструватися</a>
+    </div>
+</div>
 
 </body>
 </html>
