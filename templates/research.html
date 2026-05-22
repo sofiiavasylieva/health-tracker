@@ -2,137 +2,109 @@
 {% block content %}
 
 <div class="page-header">
-    <div class="page-title">Аналіз підходів</div>
-    <div class="page-subtitle">Порівняння рекомендацій: Rule-based vs ML vs AI</div>
-</div>
-
-<div class="card mb-16" style="background: var(--indigo-dim); border-color: rgba(99,102,241,0.2);">
-    <div class="flex-center gap-12">
-        <i class="fas fa-info-circle" style="color: var(--indigo); font-size: 1.1rem;"></i>
-        <div style="font-size: 0.88rem; color: var(--text-2); line-height: 1.55;">
-            Ця сторінка призначена для <strong>дослідницьких цілей</strong>. Тут видно як кожен з трьох підходів
-            реагує на одні й ті самі дані користувача, що дозволяє порівняти їх ефективність та персоналізацію.
-        </div>
+    <div>
+        <div class="page-title">Аналіз підходів</div>
+        <div class="page-subtitle">Порівняльне дослідження Rule-Based, ML та AI рекомендацій</div>
     </div>
 </div>
 
-<div class="approach-grid">
-
-    <!-- Rule-Based -->
-    <div class="approach-col">
-        <div class="approach-header rule">
-            <i class="fas fa-code-branch"></i>
-            Rule-Based
-            <span style="margin-left:auto; font-size:0.72rem; opacity:0.6; font-weight:400;">Логічні правила</span>
-        </div>
-        <div class="approach-body">
-            {% if grouped.rule_based %}
-                {% for r in grouped.rule_based[:8] %}
-                <div class="rec-item">
-                    <div>{{ r[2] }}</div>
-                    <div class="rec-meta">
-                        <i class="fas fa-tag"></i> {{ r[1] }}
-                        <span>·</span>
-                        <i class="fas fa-calendar"></i> {{ r[3] }}
-                    </div>
-                </div>
-                {% endfor %}
-            {% else %}
-                <div style="text-align:center; padding: 30px 0; color: var(--text-3); font-size: 0.85rem;">
-                    <i class="fas fa-inbox" style="font-size:1.8rem; display:block; margin-bottom:8px; opacity:0.3;"></i>
-                    Рекомендацій ще немає.<br>Введи дані у Трекері.
-                </div>
-            {% endif %}
-        </div>
-    </div>
-
-    <!-- ML -->
-    <div class="approach-col">
-        <div class="approach-header ml">
-            <i class="fas fa-brain"></i>
-            ML-підхід
-            <span style="margin-left:auto; font-size:0.72rem; opacity:0.6; font-weight:400;">Машинне навчання</span>
-        </div>
-        <div class="approach-body">
-            {% if grouped.ml %}
-                {% for r in grouped.ml[:8] %}
-                <div class="rec-item">
-                    <div>{{ r[2] }}</div>
-                    <div class="rec-meta">
-                        <i class="fas fa-tag"></i> {{ r[1] }}
-                        <span>·</span>
-                        <i class="fas fa-calendar"></i> {{ r[3] }}
-                    </div>
-                </div>
-                {% endfor %}
-            {% else %}
-                <div style="text-align:center; padding: 30px 0; color: var(--text-3); font-size: 0.85rem;">
-                    <i class="fas fa-robot" style="font-size:1.8rem; display:block; margin-bottom:8px; opacity:0.3;"></i>
-                    ML-модуль буде реалізовано<br>на наступному етапі.
-                </div>
-            {% endif %}
-        </div>
-    </div>
-
-    <!-- AI -->
-    <div class="approach-col">
-        <div class="approach-header ai">
-            <i class="fas fa-sparkles"></i>
-            AI-підхід
-            <span style="margin-left:auto; font-size:0.72rem; opacity:0.6; font-weight:400;">Мовна модель</span>
-        </div>
-        <div class="approach-body">
-            {% if grouped.ai %}
-                {% for r in grouped.ai[:8] %}
-                <div class="rec-item">
-                    <div>{{ r[2] }}</div>
-                    <div class="rec-meta">
-                        <i class="fas fa-tag"></i> {{ r[1] }}
-                        <span>·</span>
-                        <i class="fas fa-calendar"></i> {{ r[3] }}
-                    </div>
-                </div>
-                {% endfor %}
-            {% else %}
-                <div style="text-align:center; padding: 30px 0; color: var(--text-3); font-size: 0.85rem;">
-                    <i class="fas fa-comment-dots" style="font-size:1.8rem; display:block; margin-bottom:8px; opacity:0.3;"></i>
-                    AI-рекомендації з'являться<br>після використання чату.
-                </div>
-            {% endif %}
-        </div>
-    </div>
-
+<div class="tabs mb-20">
+    <button class="tab-btn active" onclick="showTab('charts',this)"><i class="fas fa-chart-pie"></i> Діаграми</button>
+    <button class="tab-btn" onclick="showTab('users',this)"><i class="fas fa-users"></i> По юзерах</button>
 </div>
 
-<!-- Stats summary -->
-<div class="divider"></div>
-<div class="section-label"><i class="fas fa-chart-bar" style="color:var(--indigo);"></i> Зведена статистика</div>
+{# TAB CHARTS #}
+<div id="tab-charts" class="tab-content">
 
-<div class="grid-3">
-    <div class="stat-card">
-        <div class="stat-icon" style="background:rgba(16,185,129,0.1);">
-            <i class="fas fa-code-branch" style="color:var(--emerald);"></i>
-        </div>
-        <div class="card-title">Rule-Based</div>
-        <div class="card-value">{{ grouped.rule_based | length }}</div>
-        <div class="card-note">рекомендацій згенеровано</div>
+    <div class="section-label"><i class="fas fa-chart-pie icon-blue"></i> Розподіл типів рекомендацій</div>
+    <div class="card mb-20" style="padding:8px;">
+        {% if chart_dist %}
+            <img src="data:image/png;base64,{{ chart_dist }}" style="width:100%;border-radius:8px;">
+        {% else %}
+            <div style="text-align:center;padding:40px;color:var(--text-3);">Немає даних — запусти seed_db.py та generate_all_recommendations.py</div>
+        {% endif %}
     </div>
-    <div class="stat-card">
-        <div class="stat-icon" style="background:var(--indigo-dim);">
-            <i class="fas fa-brain" style="color:var(--indigo);"></i>
-        </div>
-        <div class="card-title">ML-підхід</div>
-        <div class="card-value">{{ grouped.ml | length }}</div>
-        <div class="card-note">рекомендацій згенеровано</div>
+
+    <div class="section-label"><i class="fas fa-user-check icon-blue"></i> Рівень персоналізації рекомендацій</div>
+    <div class="card mb-20" style="padding:8px;">
+        {% if chart_pers %}
+            <img src="data:image/png;base64,{{ chart_pers }}" style="width:100%;border-radius:8px;">
+        {% else %}
+            <div style="text-align:center;padding:40px;color:var(--text-3);">Немає даних</div>
+        {% endif %}
     </div>
-    <div class="stat-card">
-        <div class="stat-icon" style="background:rgba(139,92,246,0.1);">
-            <i class="fas fa-robot" style="color:var(--violet);"></i>
+
+    <div class="card" style="background:var(--blue-light);border:1px solid rgba(37,99,235,0.15);">
+        <div style="font-size:0.88rem;font-weight:700;color:var(--blue);margin-bottom:10px;">
+            <i class="fas fa-info-circle"></i> Пояснення рівнів персоналізації
         </div>
-        <div class="card-title">AI-підхід</div>
-        <div class="card-value">{{ grouped.ai | length }}</div>
-        <div class="card-note">рекомендацій згенеровано</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;font-size:0.82rem;color:var(--text-2);">
+            <div><strong style="color:var(--text);">Загальна</strong><br>Порада без конкретних чисел. Напр.: "Підтримуйте режим сну"</div>
+            <div><strong style="color:var(--text);">Базова</strong><br>Є конкретне число. Напр.: "Пульс 84 уд/хв — норма"</div>
+            <div><strong style="color:var(--text);">Середня</strong><br>Порівняння з особистою нормою. Напр.: "На 12 уд/хв вище вашої звичайної норми (72)"</div>
+            <div><strong style="color:var(--text);">Висока</strong><br>Прогноз або порівняння з кластером. Напр.: "Прогноз через 7 днів: 103 кг. Для людей вашого профілю норма 77 уд/хв"</div>
+        </div>
     </div>
 </div>
 
+{# TAB 1 #}
+
+
+<div id="tab-users" class="tab-content" style="display:none;">
+    <div class="section-label"><i class="fas fa-users icon-blue"></i> Рекомендації по тестових профілях</div>
+    {% if users_table %}
+        {% for u in users_table %}
+        <div class="card mb-16">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border-2);">
+                <div style="width:34px;height:34px;background:var(--blue);border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:0.82rem;flex-shrink:0;">{{ u.name[0].upper() }}</div>
+                <div>
+                    <div style="font-weight:700;font-size:0.92rem;color:var(--text);">{{ u.name }}</div>
+                    <div style="font-size:0.75rem;color:var(--text-3);">{{ u.email }}</div>
+                </div>
+            </div>
+            <div style="overflow-x:auto;">
+            <table style="width:100%;border-collapse:collapse;font-size:0.82rem;min-width:700px;">
+                <thead>
+                    <tr>
+                        <th style="text-align:left;padding:7px 10px;font-size:0.68rem;font-weight:700;text-transform:uppercase;border-bottom:1px solid var(--border);width:90px;color:var(--text-3);">Категорія</th>
+                        <th style="padding:7px 10px;font-size:0.68rem;font-weight:700;text-transform:uppercase;border-bottom:1px solid var(--border);text-align:left;color:var(--teal);">Rule-Based</th>
+                        <th style="padding:7px 10px;font-size:0.68rem;font-weight:700;text-transform:uppercase;border-bottom:1px solid var(--border);text-align:left;color:var(--blue);">ML</th>
+                        <th style="padding:7px 10px;font-size:0.68rem;font-weight:700;text-transform:uppercase;border-bottom:1px solid var(--border);text-align:left;color:var(--violet);">AI</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in u.rows %}
+                    <tr style="border-bottom:1px solid var(--border-2);vertical-align:top;">
+                        <td style="padding:8px 10px;font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-3);">{{ row.cat }}</td>
+                        <td style="padding:8px 10px;color:var(--text-2);line-height:1.5;">{{ row.rule_based or '—' }}</td>
+                        <td style="padding:8px 10px;color:var(--text-2);line-height:1.5;">{{ row.ml or '—' }}</td>
+                        <td style="padding:8px 10px;color:var(--text-2);line-height:1.5;">{{ row.ai or '—' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="card" style="text-align:center;padding:40px;color:var(--text-3);">
+            <i class="fas fa-database" style="font-size:2rem;opacity:0.2;display:block;margin-bottom:12px;"></i>
+            Немає даних. Запусти <code>seed_db.py</code> та <code>generate_all_recommendations.py</code>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    document.querySelectorAll(".pct-bar").forEach(function(el) {
+        el.style.width = (el.dataset.w || 0) + "%";
+    });
+});
+function showTab(name, btn) {
+    document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + name).style.display = 'block';
+    if (btn) btn.classList.add('active');
+}
+</script>
 {% endblock %}

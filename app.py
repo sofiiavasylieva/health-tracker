@@ -1,6 +1,7 @@
 import matplotlib
 matplotlib.use('Agg')
 from flask import Flask, render_template, request, redirect, url_for, session, flash
+from werkzeug.security import generate_password_hash, check_password_hash
 import sqlite3
 import io
 import base64
@@ -10,6 +11,9 @@ from typing import Dict, Optional, Any
 import os
 from datetime import datetime
 from recommenders.ml_recommender import MLRecommender
+from recommenders.ai_recommender import AIRecommender
+from dotenv import load_dotenv
+load_dotenv()
 
 class Calculator(ABC):
     @abstractmethod
@@ -106,7 +110,8 @@ class DatabaseRepository:
                 initial_weight REAL,
                 goal TEXT,
                 activity_level REAL DEFAULT 1.2,
-                onboarding_complete INTEGER DEFAULT 0
+                onboarding_complete INTEGER DEFAULT 0,
+                is_admin INTEGER DEFAULT 0
             )''',
             '''CREATE TABLE IF NOT EXISTS basic_data (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -199,7 +204,7 @@ class UserRepository:
 class HealthTrackerApp:
     def __init__(self):
         self.app = Flask(__name__)
-        self.app.secret_key = os.urandom(24)
+        self.app.secret_key = os.environ.get('SECRET_KEY', 'health-tracker-secret-key-2026')
         self.db_repo = DatabaseRepository('health_tracker.db')
         self.user_repo = UserRepository(self.db_repo)
         self.calculators = {
@@ -208,9 +213,16 @@ class HealthTrackerApp:
             'calories': CalorieCalculator(),
         }
         self.db_repo.initialize_db()
+        # Міграція: додаємо is_admin якщо колонки ще немає
+        try:
+            self.db_repo.execute_query("ALTER TABLE users ADD COLUMN is_admin INTEGER DEFAULT 0")
+        except Exception:
+            pass  # Колонка вже існує
         csv_path = os.path.join(os.path.dirname(__file__), "personalised_dataset_clean.csv")
         self.ml = MLRecommender(csv_path)
+        self.ai = AIRecommender()
         self.setup_routes()
+        self.setup_chat_route()
 
     def get_current_user(self):
         if 'user_id' not in session:
@@ -242,21 +254,61 @@ class HealthTrackerApp:
                 )
 
             # Latest rule-based recommendation
-            latest_rule = self.db_repo.execute_query(
-                "SELECT recommendation FROM recommendations WHERE user_id=? AND approach='rule_based' ORDER BY date DESC LIMIT 1",
-                (session['user_id'],), fetchone=True
+            rule_recs = self.db_repo.execute_query(
+                "SELECT category, recommendation FROM recommendations WHERE user_id=? AND approach='rule_based' ORDER BY date DESC",
+                (session['user_id'],), fetchall=True
             )
-            latest_ml = self.db_repo.execute_query(
-                "SELECT recommendation FROM recommendations WHERE user_id=? AND approach='ml' ORDER BY date DESC LIMIT 1",
-                (session['user_id'],), fetchone=True
+            ml_recs = self.db_repo.execute_query(
+                "SELECT category, recommendation FROM recommendations WHERE user_id=? AND approach='ml' ORDER BY date DESC",
+                (session['user_id'],), fetchall=True
             )
+            ai_recs = self.db_repo.execute_query(
+                "SELECT category, recommendation FROM recommendations WHERE user_id=? AND approach='ai' ORDER BY date DESC",
+                (session['user_id'],), fetchall=True
+            )
+
+            uid = session['user_id']
+            # Stat cards: latest values + trend vs previous
+            def get_stat(table, col):
+                rows = self.db_repo.execute_query(
+                    f"SELECT {col} FROM {table} WHERE user_id=? AND {col} IS NOT NULL ORDER BY date DESC LIMIT 2",
+                    (uid,), fetchall=True
+                )
+                if not rows: return None, None
+                cur = float(rows[0][0])
+                prev = float(rows[1][0]) if len(rows) > 1 else None
+                if prev and prev != 0:
+                    diff = round(((cur - prev) / prev) * 100, 1)
+                else:
+                    diff = None
+                return cur, diff
+
+            w_val, w_diff   = get_stat('basic_data', 'weight')
+            s_val, s_diff   = get_stat('basic_data', 'steps')
+            p_val, p_diff   = get_stat('health_data', 'pulse')
+            bp_row = self.db_repo.execute_query(
+                "SELECT blood_pressure FROM health_data WHERE user_id=? AND blood_pressure IS NOT NULL ORDER BY date DESC LIMIT 1",
+                (uid,), fetchone=True
+            )
+            bp_val = bp_row[0] if bp_row else None
+            sl_val, sl_diff = get_stat('health_data', 'duration_sleep')
+
+            stat_cards = [
+                {'label': 'Вага', 'value': f'{w_val} кг' if w_val else '—', 'diff': w_diff, 'icon': 'fa-weight', 'color': 'blue'},
+                {'label': 'Кроки', 'value': f'{int(s_val):,}'.replace(',', ' ') if s_val else '—', 'diff': s_diff, 'icon': 'fa-shoe-prints', 'color': 'green'},
+                {'label': 'Пульс', 'value': f'{int(p_val)} уд/хв' if p_val else '—', 'diff': p_diff, 'icon': 'fa-heartbeat', 'color': 'red'},
+                {'label': 'Тиск', 'value': bp_val or '—', 'diff': None, 'icon': 'fa-stethoscope', 'color': 'violet'},
+                {'label': 'Сон', 'value': f'{sl_val} год' if sl_val else '—', 'diff': sl_diff, 'icon': 'fa-moon', 'color': 'teal'},
+            ]
 
             return render_template('dashboard.html',
                                    username=user[1],
                                    user=user,
                                    chart_data=chart_data,
-                                   latest_rule=latest_rule,
-                                   latest_ml=latest_ml,
+                                   rule_recs=rule_recs or [],
+                                   ml_recs=ml_recs or [],
+                                   ai_recs=ai_recs or [],
+                                   stat_cards=stat_cards,
                                    page='dashboard')
 
         @self.app.route('/onboarding', methods=['GET', 'POST'])
@@ -302,21 +354,46 @@ class HealthTrackerApp:
             if request.method == 'POST':
                 form_type = request.form.get('form_type')
 
-                if form_type == 'daily_data':
+                if form_type == 'all_data':
+                    # Unified tracker form — saves all three data types at once
+                    self.save_all_data(request)
+                    self.generate_rule_based_recommendation('daily_data')
+                    self.generate_rule_based_recommendation('health_data')
+                    self.generate_rule_based_recommendation('activity_data')
+                    self.generate_ml_recommendation()
+                    self.generate_ai_recommendation('daily_data')
+                    self.generate_ai_recommendation('health_data')
+                    self.generate_ai_recommendation('activity_data')
+                    flash('Дані збережено.', 'success')
+                    return redirect(url_for('dashboard'))
+                elif form_type == 'combined':
+                    self.save_combined_data(request)
+                    self.generate_rule_based_recommendation('daily_data')
+                    self.generate_rule_based_recommendation('health_data')
+                    self.generate_rule_based_recommendation('activity_data')
+                    self.generate_ml_recommendation()
+                    self.generate_ai_recommendation('daily_data')
+                    self.generate_ai_recommendation('health_data')
+                    self.generate_ai_recommendation('activity_data')
+                    return redirect(url_for('dashboard'))
+                elif form_type == 'daily_data':
                     self.save_daily_data(request)
                     self.generate_rule_based_recommendation('daily_data')
                     self.generate_ml_recommendation()
-                    return redirect(url_for('tracker'))
+                    self.generate_ai_recommendation('daily_data')
+                    return redirect(url_for('dashboard'))
                 elif form_type == 'health_data':
                     self.save_health_data(request)
                     self.generate_rule_based_recommendation('health_data')
                     self.generate_ml_recommendation()
-                    return redirect(url_for('tracker'))
+                    self.generate_ai_recommendation('health_data')
+                    return redirect(url_for('dashboard'))
                 elif form_type == 'activity_data':
                     self.save_activity_data(request)
                     self.generate_rule_based_recommendation('activity_data')
                     self.generate_ml_recommendation()
-                    return redirect(url_for('tracker'))
+                    self.generate_ai_recommendation('activity_data')
+                    return redirect(url_for('dashboard'))
                 elif form_type == 'calculator':
                     calc_type = request.form.get('calculator_type')
                     if calc_type in self.calculators:
@@ -356,16 +433,300 @@ class HealthTrackerApp:
         def research():
             if 'user_id' not in session:
                 return redirect(url_for('login'))
-            recs = self.db_repo.execute_query(
-                '''SELECT approach, category, recommendation, date
-                   FROM recommendations WHERE user_id=? ORDER BY date DESC LIMIT 30''',
-                (session['user_id'],), fetchall=True
-            )
-            grouped = {'rule_based': [], 'ml': [], 'ai': []}
-            for r in (recs or []):
-                if r[0] in grouped:
-                    grouped[r[0]].append(r)
-            return render_template('research.html', page='research', grouped=grouped)
+            # Перевірка адміна
+            try:
+                user_row = self.db_repo.execute_query(
+                    "SELECT is_admin FROM users WHERE id=?",
+                    (session['user_id'],), fetchone=True
+                )
+                if user_row and user_row[0] == 0:
+                    flash('Доступ заборонено. Ця сторінка тільки для адміністраторів.', 'error')
+                    return redirect(url_for('dashboard'))
+            except Exception:
+                pass  # Якщо колонки ще немає — дозволяємо доступ
+
+            import re
+
+            APPROACHES  = ['rule_based', 'ml', 'ai']
+            CATEGORIES  = ['weight', 'sleep', 'pulse', 'pressure', 'hydration', 'insights']
+            TEST_EMAILS = [
+                'andrii@test.com', 'olena@test.com', 'vasyl@test.com', 'solomiia@test.com',
+                'mykola@test.com', 'iryna@test.com', 'taras@test.com', 'halyna@test.com',
+            ]
+
+            def classify(text):
+                if not text: return None
+                t = text.lower()
+                for kw in ['критично','тахікардія','брадикардія','консультація лікаря','ожиріння','зверніться']:
+                    if kw in t: return 'critical'
+                for kw in ['норма','нормі','відповідає','стабільн','позитивн','добре']:
+                    if kw in t: return 'norm'
+                return 'deviation'
+
+            def has_numbers(text):
+                return bool(re.search(r'\d+[.,]?\d*', text or ''))
+
+            # ── Таблиця 1: рекомендації по юзерах ──
+            # Беремо всіх юзерів у яких є хоча б одна рекомендація
+            all_users = self.db_repo.execute_query(
+                "SELECT DISTINCT u.id, u.username, u.email FROM users u "
+                "INNER JOIN recommendations r ON r.user_id = u.id "
+                "ORDER BY u.username",
+                fetchall=True
+            ) or []
+
+            users_table = []
+            for uid, uname, uemail in all_users:
+                rows = []
+                for cat in CATEGORIES:
+                    row = {'cat': cat}
+                    has_any = False
+                    for ap in APPROACHES:
+                        rec = self.db_repo.execute_query(
+                            "SELECT recommendation FROM recommendations WHERE user_id=? AND approach=? AND category=? ORDER BY date DESC LIMIT 1",
+                            (uid, ap, cat), fetchone=True
+                        )
+                        row[ap] = rec[0] if rec else None
+                        if rec: has_any = True
+                    if has_any:
+                        row['cls'] = classify(row.get('ml') or row.get('rule_based') or '')
+                        rows.append(row)
+                if rows:
+                    users_table.append({'email': uemail, 'name': uname, 'rows': rows})
+
+            # ── Таблиця 2: розподіл типів ──
+            dist = {}
+            for ap in APPROACHES:
+                recs = self.db_repo.execute_query(
+                    "SELECT recommendation FROM recommendations WHERE approach=?", (ap,), fetchall=True
+                )
+                counts = {'norm': 0, 'deviation': 0, 'critical': 0}
+                with_num = 0
+                for (t,) in (recs or []):
+                    c = classify(t)
+                    if c: counts[c] += 1
+                    if has_numbers(t): with_num += 1
+                total = len(recs) if recs else 0
+                dist[ap] = {**counts, 'total': total, 'with_num': with_num,
+                            'pct_norm': round(counts['norm']*100/total) if total else 0,
+                            'pct_dev':  round(counts['deviation']*100/total) if total else 0,
+                            'pct_crit': round(counts['critical']*100/total) if total else 0,
+                            'pct_num':  round(with_num*100/total) if total else 0}
+
+            # ── Таблиця 3: специфічність по категоріях ──
+            specificity = []
+            for cat in CATEGORIES:
+                row = {'cat': cat}
+                for ap in APPROACHES:
+                    recs = self.db_repo.execute_query(
+                        "SELECT recommendation FROM recommendations WHERE approach=? AND category=?",
+                        (ap, cat), fetchall=True
+                    )
+                    if recs:
+                        n = sum(1 for (t,) in recs if has_numbers(t))
+                        row[ap] = round(n*100/len(recs))
+                    else:
+                        row[ap] = None
+                specificity.append(row)
+
+            # ── Таблиця 4: покриття ──
+            coverage = []
+            for email in TEST_EMAILS:
+                u = self.db_repo.execute_query(
+                    "SELECT id, username FROM users WHERE email=?", (email,), fetchone=True
+                )
+                if not u: continue
+                uid, uname = u
+                row = {'name': uname, 'cats': {}}
+                for cat in CATEGORIES:
+                    row['cats'][cat] = {}
+                    for ap in APPROACHES:
+                        r = self.db_repo.execute_query(
+                            "SELECT 1 FROM recommendations WHERE user_id=? AND approach=? AND category=?",
+                            (uid, ap, cat), fetchone=True
+                        )
+                        row['cats'][cat][ap] = bool(r)
+                coverage.append(row)
+
+            # ── Генерація діаграм ──
+            import matplotlib
+            matplotlib.use('Agg')
+            import matplotlib.pyplot as plt
+            import io, base64
+
+            def fig_to_b64(fig):
+                buf = io.BytesIO()
+                fig.savefig(buf, format='png', bbox_inches='tight',
+                           facecolor='white', dpi=150)
+                buf.seek(0)
+                b64 = base64.b64encode(buf.read()).decode('utf-8')
+                plt.close(fig)
+                return b64
+
+            GREEN='#2ecc71'; AMBER='#f39c12'; RED='#e74c3c'
+            BLUE='#2563eb'; TEAL='#00a693'; VIOLET='#7c3aed'
+            TXTC='#1a1f36'; TXT2='#64748b'
+
+            plt.rcParams.update({'font.family':'DejaVu Sans'})
+
+            import numpy as np
+
+            # Покращений класифікатор типу рекомендації
+            def classify_rec(text):
+                if not text: return None
+                t = text.lower()
+                # Критично — медичні терміни
+                for kw in ['критично','тахікардія','брадикардія',
+                           'консультація лікаря','зверніться до лікаря',
+                           'підвищений тиск','ожиріння']:
+                    if kw in t: return 'Критично'
+                # Норма — явні ключові слова норми
+                for kw in ['— норма','в нормі','у нормі','відповідає нормі',
+                           'норма.','продовжуйте підтримувати',
+                           'позитивна динаміка','добре']:
+                    if kw in t: return 'Норма'
+                return 'Відхилення'
+
+            # Рівень персоналізації
+            def person_level(text):
+                if not text: return 'Загальна'
+                t = text.lower()
+                has_personal = any(kw in t for kw in [
+                    'вашої норми','вашого звичного','вашої звичайн',
+                    'нижче вашої','вище вашої','ваш звичний'])
+                has_cluster = any(kw in t for kw in [
+                    'вашого профілю','людей вашого','вашої групи',
+                    'вашого віку','норми групи'])
+                has_forecast = any(kw in t for kw in [
+                    'прогноз','через 7 днів','через тиждень'])
+                if has_forecast: return 'Висока'
+                if has_cluster:  return 'Висока'
+                if has_personal: return 'Середня'
+                if re.search(r'\d+[.,]?\d*', t): return 'Базова'
+                return 'Загальна'
+
+            ap_labels = {'rule_based':'Rule-Based','ml':'ML','ai':'AI'}
+
+            # ── Кругові діаграми ──
+            fig_dist, axes = plt.subplots(1, 3, figsize=(13, 5.2))
+            fig_dist.patch.set_facecolor('white')
+            pie_cols  = [GREEN, AMBER, RED]
+            pie_names = ['Норма','Відхилення','Критично']
+
+            for ax, ap in zip(axes, APPROACHES):
+                d = dist[ap]
+                recs_all = self.db_repo.execute_query(
+                    "SELECT recommendation FROM recommendations WHERE approach=?",
+                    (ap,), fetchall=True) or []
+                # Перекласифіковуємо з покращеним класифікатором
+                real = {'Норма':0,'Відхилення':0,'Критично':0}
+                for (t,) in recs_all:
+                    c = classify_rec(t)
+                    if c: real[c] += 1
+                total = sum(real.values())
+                n_users_with = len(set(
+                    r[0] for r in (self.db_repo.execute_query(
+                        "SELECT DISTINCT user_id FROM recommendations WHERE approach=?",
+                        (ap,), fetchall=True) or [])))
+
+                ax.set_facecolor('white')
+                if total == 0:
+                    ax.text(0.5,0.5,'Немає даних\nЗапусти seed_db.py',
+                            ha='center',va='center',transform=ax.transAxes,
+                            color=TXT2,fontsize=11)
+                else:
+                    vals_f = [real[k] for k in pie_names if real[k]>0]
+                    cols_f = [pie_cols[i] for i,k in enumerate(pie_names) if real[k]>0]
+                    labs_f = [pie_names[i] for i,k in enumerate(pie_names) if real[k]>0]
+                    w, ts, auts = ax.pie(
+                        vals_f, labels=labs_f, colors=cols_f,
+                        autopct='%1.0f%%', startangle=90,
+                        explode=[0.03]*len(vals_f), pctdistance=0.68,
+                        wedgeprops=dict(edgecolor='white',linewidth=2))
+                    for t in ts:  t.set_fontsize(11); t.set_color(TXT2)
+                    for a in auts: a.set_fontsize(11); a.set_fontweight('700'); a.set_color('white')
+                ax.set_title(
+                    f"{ap_labels[ap]}\n"
+                    f"{total} рекомендацій по {n_users_with} профілях",
+                    fontsize=11, fontweight='bold', color=TXTC, pad=10)
+
+            fig_dist.suptitle('Розподіл типів рекомендацій по підходах\n'
+                '(класифікація по ключових словах у тексті рекомендації)',
+                fontsize=12, fontweight='bold', color=TXTC, y=1.04)
+            chart_dist = fig_to_b64(fig_dist)
+
+            # ── Накопичена стовпчаста (stacked) — персоналізація ──
+            levels = ['Загальна','Базова','Середня','Висока']
+            lcols  = ['#e2e8f0','#94a3b8','#3b82f6','#1e40af']
+            llabs  = [
+                'Загальна — загальна фраза без порівнянь',
+                'Базова — є конкретне число',
+                'Середня — порівняння з особистою нормою',
+                'Висока — прогноз або кластерне порівняння']
+
+            pdata = {}
+            for ap in APPROACHES:
+                recs = self.db_repo.execute_query(
+                    "SELECT recommendation FROM recommendations WHERE approach=?",
+                    (ap,), fetchall=True) or []
+                cnt = {l:0 for l in levels}
+                for (t,) in recs:
+                    cnt[person_level(t)] += 1
+                tot = len(recs) or 1
+                pdata[ap] = {l: round(v*100/tot) for l,v in cnt.items()}
+
+            fig_pers, ax2 = plt.subplots(figsize=(9, 5.5))
+            fig_pers.patch.set_facecolor('white')
+            ax2.set_facecolor('#f8f9fc')
+
+            ap_names = ['Rule-Based','ML','AI']
+            x = np.arange(3)
+            bottoms = np.zeros(3)
+
+            for lev, col, lab in zip(levels, lcols, llabs):
+                vals = np.array([pdata[ap][lev] for ap in APPROACHES], dtype=float)
+                bars = ax2.bar(x, vals, 0.5, bottom=bottoms,
+                               label=lab, color=col, edgecolor='white', linewidth=1.2, zorder=3)
+                for i,(bar,v) in enumerate(zip(bars,vals)):
+                    if v >= 8:
+                        ax2.text(bar.get_x()+bar.get_width()/2,
+                                 bottoms[i]+v/2,
+                                 f'{int(v)}%', ha='center', va='center',
+                                 fontsize=9.5, fontweight='700',
+                                 color='white' if col in ['#3b82f6','#1e40af'] else TXTC)
+                bottoms += vals
+
+            ax2.set_xticks(x)
+            ax2.set_xticklabels(ap_names, fontsize=13, fontweight='700', color=TXTC)
+            ax2.set_ylabel('% рекомендацій', fontsize=10, color=TXT2)
+            ax2.set_ylim(0, 115)
+            ax2.set_title(
+                'Рівень персоналізації рекомендацій\n'
+                'Кожен стовпчик = 100% рекомендацій підходу, поділених за рівнем персоналізації',
+                fontsize=11, fontweight='bold', color=TXTC, pad=12)
+            ax2.spines['top'].set_visible(False)
+            ax2.spines['right'].set_visible(False)
+            ax2.spines['left'].set_color('#e2e8f0')
+            ax2.spines['bottom'].set_color('#e2e8f0')
+            ax2.grid(axis='y', color='#e2e8f0', linewidth=0.8, linestyle='--', zorder=0)
+            ax2.set_axisbelow(True)
+            legend = ax2.legend(fontsize=9, framealpha=0.95, edgecolor='#e2e8f0',
+                                fancybox=True, loc='upper right',
+                                title='Рівень персоналізації', title_fontsize=9.5,
+                                bbox_to_anchor=(1.0, 1.0))
+            legend.get_title().set_fontweight('700')
+            chart_pers = fig_to_b64(fig_pers)
+
+            return render_template('research.html',
+                page='research',
+                users_table=users_table,
+                dist=dist,
+                specificity=specificity,
+                coverage=coverage,
+                categories=CATEGORIES,
+                approaches=APPROACHES,
+                chart_dist=chart_dist,
+                chart_pers=chart_pers)
 
         @self.app.route('/profile', methods=['GET', 'POST'])
         def profile():
@@ -395,13 +756,21 @@ class HealthTrackerApp:
                 user = self.user_repo.get_user_by_email(email)
                 if user is None:
                     error_email = "Користувач не існує. Зареєструйтеся."
-                elif user[3] != password:
-                    error_password = "Невірний пароль."
                 else:
-                    session['user_id'] = user[0]
-                    if not user[10]:  # onboarding_complete
-                        return redirect(url_for('onboarding'))
-                    return redirect(url_for('dashboard'))
+                    pwd_ok = False
+                    try:
+                        pwd_ok = check_password_hash(user[3], password)
+                    except Exception:
+                        pass
+                    if not pwd_ok:
+                        pwd_ok = (user[3] == password)
+                    if not pwd_ok:
+                        error_password = "Невірний пароль."
+                    else:
+                        session['user_id'] = user[0]
+                        if not user[10]:  # onboarding_complete
+                            return redirect(url_for('onboarding'))
+                        return redirect(url_for('dashboard'))
             return render_template('login.html', error_email=error_email, error_password=error_password)
 
         @self.app.route('/register', methods=['GET', 'POST'])
@@ -416,10 +785,14 @@ class HealthTrackerApp:
                 if len(password) < 8:
                     flash('Пароль має бути довшим за 8 символів!', 'error')
                     return redirect(url_for('register'))
-                if self.user_repo.register_user(username, email, password):
+                hashed_pw = generate_password_hash(password)
+                if self.user_repo.register_user(username, email, hashed_pw):
                     user = self.user_repo.get_user_by_email(email)
-                    session['user_id'] = user[0]
-                    return redirect(url_for('onboarding'))
+                    if user:
+                        session['user_id'] = user[0]
+                        return redirect(url_for('onboarding'))
+                    flash('Помилка реєстрації. Спробуйте ще раз.', 'error')
+                    return redirect(url_for('register'))
                 flash('Користувач із таким email або іменем вже існує!', 'error')
             return render_template('register.html')
 
@@ -443,6 +816,109 @@ class HealthTrackerApp:
             session.clear()
             return redirect(url_for('login'))
 
+
+    def save_all_data(self, request):
+        """Зберігає всі дані з єдиної форми трекера (all_data form_type)"""
+        uid  = session['user_id']
+        date = request.form.get('date')
+        if not date:
+            from datetime import datetime
+            date = datetime.now().strftime('%Y-%m-%d')
+
+        # weight: пріоритет — текстове поле, fallback — слайдер
+        weight_text   = request.form.get('weight', '').strip()
+        weight_slider = request.form.get('weight_range', '').strip()
+        weight = weight_text or weight_slider
+
+        steps_text    = request.form.get('steps', '').strip()
+        steps_slider  = request.form.get('steps_range', '').strip()
+        steps = steps_text or steps_slider
+
+        sleep  = request.form.get('duration_sleep', '').strip()
+        pulse  = request.form.get('pulse', '').strip()
+        bp     = request.form.get('blood_pressure', '').strip()
+        act    = request.form.get('activity_type', '').strip()
+        dur    = request.form.get('duration', '').strip()
+        water  = request.form.get('water_intake', '').strip()
+
+        # Ігноруємо мінімальні значення слайдерів (означає "не введено")
+        if weight == '40': weight = ''   # мін слайдера ваги
+        if steps  == '0':  steps  = ''   # мін слайдера кроків
+        if sleep  == '0':  sleep  = ''
+        if pulse  == '40': pulse  = ''
+        if water  == '0':  water  = ''
+
+        if weight or steps:
+            self.db_repo.execute_query(
+                "INSERT INTO basic_data (user_id, date, weight, steps) VALUES (?,?,?,?)",
+                (uid, date,
+                 float(weight) if weight else None,
+                 int(steps)    if steps  else None)
+            )
+
+        if sleep or pulse or bp:
+            self.db_repo.execute_query(
+                "INSERT INTO health_data (user_id, date, duration_sleep, pulse, blood_pressure) VALUES (?,?,?,?,?)",
+                (uid, date,
+                 float(sleep) if sleep else None,
+                 int(pulse)   if pulse else None,
+                 bp           if bp    else None)
+            )
+
+        if act or dur or water:
+            self.db_repo.execute_query(
+                "INSERT INTO activity_data (user_id, date, activity_type, duration, water_intake) VALUES (?,?,?,?,?)",
+                (uid, date,
+                 act          if act   else None,
+                 int(dur)     if dur   else None,
+                 float(water) if water else None)
+            )
+
+    def save_combined_data(self, request):
+        """Зберігає всі дані з єдиної форми трекера"""
+        uid   = session['user_id']
+        date  = request.form.get('date')
+        if not date:
+            from datetime import datetime
+            date = datetime.now().strftime('%Y-%m-%d')
+
+        weight = request.form.get('weight')
+        steps  = request.form.get('steps')
+        sleep  = request.form.get('duration_sleep')
+        pulse  = request.form.get('pulse')
+        bp     = request.form.get('blood_pressure')
+        act    = request.form.get('activity_type')
+        dur    = request.form.get('duration')
+        water  = request.form.get('water_intake')
+
+        # Зберігаємо тільки ті поля що заповнені
+        if weight or steps:
+            self.db_repo.execute_query(
+                "INSERT INTO basic_data (user_id, date, weight, steps) VALUES (?,?,?,?)",
+                (uid, date,
+                 float(weight) if weight else None,
+                 int(steps) if steps else None)
+            )
+
+        if sleep or pulse or bp:
+            self.db_repo.execute_query(
+                "INSERT INTO health_data (user_id, date, duration_sleep, pulse, blood_pressure) VALUES (?,?,?,?,?)",
+                (uid, date,
+                 float(sleep) if sleep else None,
+                 int(pulse) if pulse else None,
+                 bp if bp else None)
+            )
+
+        if act or dur or water:
+            self.db_repo.execute_query(
+                "INSERT INTO activity_data (user_id, date, activity_type, duration, water_intake) VALUES (?,?,?,?,?)",
+                (uid, date,
+                 act if act else None,
+                 int(dur) if dur else None,
+                 float(water) if water else None)
+            )
+
+        flash('Дані збережено.', 'success')
 
     def save_daily_data(self, request):
         date = request.form.get('date')
@@ -508,13 +984,20 @@ class HealthTrackerApp:
 
 
     def generate_rule_based_recommendation(self, form_type='daily_data'):
-        uid = session['user_id']
+        uid = session.get('user_id')
+        if not uid:
+            print("[WARN] rule_based: немає user_id в сесії")
+            return
         user = self.get_current_user()
         if not user:
+            print(f"[WARN] rule_based: юзера {uid} не знайдено в БД")
             return
 
         height = user[6]
-        recs   = []
+        if not height:
+            print(f"[WARN] rule_based: у юзера {uid} не заповнено зріст — онбординг не завершено")
+
+        recs = []
 
         if form_type == 'daily_data':
             last_weight = self.db_repo.execute_query(
@@ -599,8 +1082,13 @@ class HealthTrackerApp:
                 elif duration and duration >= 30:
                     recs.append(('activity', f'Активність {duration} хв — добрий результат!'))
 
+        print(f"[DEBUG] rule_based form_type={form_type}, recs={len(recs)}, uid={uid}")
         for category, text in recs:
-            self._save_recommendation(uid, 'rule_based', category, text)
+            if isinstance(text, str) and text.strip():
+                self._save_recommendation(uid, 'rule_based', category, text)
+                print(f"[DEBUG] rule_based збережено: {category}")
+            else:
+                print(f"[WARN] rule_based text має тип {type(text)}: {text}")
 
 
     def plot_metric_chart(self, metric_name: str, ylabel: str, color: str = '#6366f1') -> Optional[str]:
@@ -682,29 +1170,122 @@ class HealthTrackerApp:
         return img_base64
 
     def _save_recommendation(self, uid, approach, category, text):
+        if not isinstance(text, str) or not text.strip():
+            print(f"[WARN] _save_recommendation: text має тип {type(text)}, пропускаємо")
+            return
         today = datetime.now().strftime('%Y-%m-%d')
-        self.db_repo.execute_query(
-            "INSERT INTO recommendations (user_id, date, approach, category, recommendation) VALUES (?,?,?,?,?)",
-            (uid, today, approach, category, text)
-        )
+        try:
+            self.db_repo.execute_query(
+                "DELETE FROM recommendations WHERE user_id=? AND approach=? AND category=?",
+                (uid, approach, category)
+            )
+            self.db_repo.execute_query(
+                "INSERT INTO recommendations (user_id, date, approach, category, recommendation) VALUES (?,?,?,?,?)",
+                (uid, today, approach, category, text)
+            )
+            print(f"[DEBUG] _save_recommendation OK: {approach}/{category}")
+        except Exception as e:
+            print(f"[ERROR] _save_recommendation {approach}/{category}: {e}")
 
     def generate_ml_recommendation(self):
         uid = session.get('user_id')
         if not uid:
             return
-        today = datetime.now().strftime('%Y-%m-%d')
-        already = self.db_repo.execute_query(
-            "SELECT id FROM recommendations WHERE user_id=? AND approach='ml' AND date=?",
-            (uid, today), fetchone=True
-        )
-        if already:
+        try:
+            recs = self.ml.generate(uid, self.db_repo)
+            print(f"[DEBUG] ML generate повернув {len(recs)} категорій: {list(recs.keys())}")
+            for category, text in recs.items():
+                if text and isinstance(text, str):
+                    self._save_recommendation(uid, 'ml', category, text)
+                    print(f"[DEBUG] ML збережено: {category}")
+        except Exception as e:
+            import traceback
+            print(f"[ERROR] generate_ml_recommendation: {e}")
+            traceback.print_exc()
+
+    def generate_ai_recommendation(self, form_type='daily_data'):
+        uid = session.get('user_id')
+        print(f"[DEBUG] AI: form_type={form_type}, uid={uid}")
+        if not uid:
             return
-        rec_text = self.ml.generate(uid, self.db_repo)
-        if rec_text:
-            self._save_recommendation(uid, 'ml', 'general', rec_text)
+        from datetime import datetime
+        today = datetime.now().strftime('%Y-%m-%d')
+
+        needed = {
+            'daily_data':    ['weight'],
+            'health_data':   ['sleep', 'pulse', 'pressure'],
+            'activity_data': ['hydration'],
+        }.get(form_type, [])
+
+        print(f"[DEBUG] AI: needed={needed}")
+        if not needed:
+            return
+
+        existing = self.db_repo.execute_query(
+            "SELECT category FROM recommendations WHERE user_id=? AND approach='ai' AND date=?",
+            (uid, today), fetchall=True
+        )
+        existing_cats = {r[0] for r in existing} if existing else set()
+        to_generate = [c for c in needed if c not in existing_cats]
+
+        print(f"[DEBUG] AI: to_generate={to_generate}, existing={existing_cats}")
+        if not to_generate:
+            print(f"[DEBUG] AI: всі категорії вже є сьогодні — пропускаємо")
+            return
+
+        print(f"[DEBUG] AI: запускаємо generate для {to_generate}")
+        try:
+            recs = self.ai.generate(uid, self.db_repo, categories=to_generate)
+            print(f"[DEBUG] AI: отримано {len(recs)} рекомендацій: {list(recs.keys())}")
+            for category, text in recs.items():
+                if text and isinstance(text, str):
+                    self._save_recommendation(uid, 'ai', category, text)
+                    print(f"[DEBUG] AI збережено: {category}")
+        except Exception as e:
+            import traceback
+            print(f"[ERROR] generate_ai_recommendation: {e}")
+            traceback.print_exc()
+
+
+    def setup_chat_route(self):
+        @self.app.route('/api/chat', methods=['POST'])
+        def api_chat():
+            if 'user_id' not in session:
+                return {'error': 'unauthorized'}, 401
+            data = request.get_json()
+            user_message = data.get('message', '').strip()
+            if not user_message:
+                return {'error': 'empty'}, 400
+
+            uid = session['user_id']
+            user = self.db_repo.execute_query(
+                "SELECT username, age, gender, height, goal, activity_level FROM users WHERE id=?",
+                (uid,), fetchone=True
+            )
+            profile = ''
+            if user:
+                profile = f"Ім'я: {user[0]}, вік: {user[1]}, стать: {user[2]}, зріст: {user[3]} см, ціль: {user[4]}"
+
+            try:
+                from groq import Groq
+                import os
+                client = Groq(api_key=os.getenv('GROQ_API_KEY'))
+                response = client.chat.completions.create(
+                    model='llama-3.3-70b-versatile',
+                    messages=[
+                        {"role": "system", "content": f"Ти — AI помічник у Health Tracker. Профіль користувача: {profile}. Відповідай українською мовою, коротко і практично, 2-4 речення."},
+                        {"role": "user", "content": user_message}
+                    ],
+                    max_tokens=300,
+                    temperature=0.5,
+                )
+                reply = response.choices[0].message.content.strip()
+                return {'reply': reply}
+            except Exception as e:
+                return {'reply': f'Помилка: {str(e)}'}
 
     def run(self):
-        self.app.run(debug=True, port=5001)
+        self.app.run(debug=True, port=5003)
 
 
 if __name__ == "__main__":

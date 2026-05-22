@@ -8,6 +8,6 @@
 #    pip install flask
 # 3. Перевірте наявність app.py, templates, static.
 # 4. (Опціонально) python app.py init_db
-# 5. Запустіть: python app.py; відкрийте http://127.0.0.1:5001/
+# 5. Запустіть: python app.py; відкрийте http://127.0.0.1:5003/
 # 6. Зупинка: Ctrl+C
 # Поради: Очистіть кеш (Ctrl+Shift+R); 

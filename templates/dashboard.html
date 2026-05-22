@@ -1,114 +1,147 @@
 {% extends "base.html" %}
 {% block content %}
 
-<div class="page-header flex-center justify-between">
+<div class="page-header">
     <div>
-        <div class="page-title">Дашборд</div>
-        <div class="page-subtitle">Привіт, {{ username }}! Ось твої показники.</div>
+        <div class="page-title">Health Dashboard</div>
+        <div class="page-subtitle">Track your health metrics over time · Привіт, {{ username }}!</div>
     </div>
     <a href="{{ url_for('tracker') }}" class="btn btn-primary btn-sm">
-        <i class="fas fa-plus"></i> Додати дані
+        <i class="fas fa-plus"></i> Add Entry
     </a>
 </div>
 
 {% with messages = get_flashed_messages(with_categories=True) %}
     {% for category, message in messages %}
         <div class="alert alert-{{ 'success' if category == 'success' else 'error' }}">
-            <i class="fas fa-{% if category == 'success' %}check-circle{% else %}exclamation-circle{% endif %}"></i>
-            {{ message }}
+            <i class="fas fa-check-circle"></i> {{ message }}
         </div>
     {% endfor %}
 {% endwith %}
 
-<!-- Recommendation card -->
-{% if latest_rec %}
-<div class="card mb-16" style="border-left: 4px solid var(--emerald); background: linear-gradient(135deg, rgba(16,185,129,0.04), var(--surface));">
-    <div class="flex-center gap-12 mb-8">
-        <span class="badge badge-emerald"><i class="fas fa-lightbulb"></i> Рекомендація</span>
-        <span style="font-size:0.75rem; color: var(--text-3);">Rule-based аналіз</span>
+<!-- STAT CARDS -->
+{% if stat_cards %}
+<div class="stat-grid">
+{% for card in stat_cards %}
+{% set color = card.color %}
+<div class="stat-card">
+    <div class="stat-card-border border-{{ color }}"></div>
+    <div class="stat-icon-wrap icon-{{ color }}">
+        <i class="fas {{ card.icon }}"></i>
     </div>
-    <div style="font-size: 0.92rem; color: var(--text); line-height: 1.6;">{{ latest_rec[0] }}</div>
+    <div class="stat-label">{{ card.label }}</div>
+    <div class="stat-value">{{ card.value }}</div>
+    {% if card.diff is not none %}
+    <div class="stat-trend {% if card.diff > 0 %}trend-up{% elif card.diff < 0 %}trend-down{% else %}trend-flat{% endif %}">
+        <i class="fas fa-arrow-{% if card.diff > 0 %}up{% elif card.diff < 0 %}down{% else %}right{% endif %}"></i>
+        {{ card.diff|abs }}% vs попередній
+    </div>
+    {% else %}
+    <div class="stat-trend trend-flat">— немає порівняння</div>
+    {% endif %}
+</div>
+{% endfor %}
 </div>
 {% endif %}
 
-<!-- Charts grid -->
-<div class="section-label"><i class="fas fa-chart-line" style="color: var(--indigo);"></i> Динаміка показників</div>
-<div class="grid-auto">
+<!-- CHARTS -->
+<div class="section-label">
+    <i class="fas fa-chart-line" style="color:var(--blue);"></i> Динаміка показників
+</div>
 
-    <div class="card">
-        <div class="flex-center justify-between mb-8">
-            <div class="card-title">Вага</div>
-            <span class="badge badge-indigo"><i class="fas fa-weight"></i> кг</span>
-        </div>
-        {% if chart_data['weight'] %}
-            <img src="data:image/png;base64,{{ chart_data['weight'] }}" style="width:100%; border-radius: 8px;">
-        {% else %}
-            <div style="text-align:center; padding: 40px 0; color: var(--text-3); font-size: 0.88rem;">
-                <i class="fas fa-chart-line" style="font-size: 2rem; opacity: 0.3; display:block; margin-bottom:10px;"></i>
-                Додай вагу у Трекері
+<div class="charts-grid">
+    {% set charts = [
+        ('weight', 'Weight Trend', 'chart-blue',   'fa-weight'),
+        ('steps',  'Daily Steps',  'chart-green',  'fa-shoe-prints'),
+        ('pulse',  'Heart Rate',   'chart-red',    'fa-heartbeat'),
+        ('sleep',  'Sleep Hours',  'chart-violet', 'fa-moon')
+    ] %}
+    {% for metric, label, cls, icon in charts %}
+    <div class="chart-card">
+        <div class="chart-card-head">
+            <div class="chart-title">
+                <div class="chart-title-icon {{ cls }}">
+                    <i class="fas {{ icon }}"></i>
+                </div>
+                {{ label }}
             </div>
-        {% endif %}
-    </div>
-
-    <div class="card">
-        <div class="flex-center justify-between mb-8">
-            <div class="card-title">Пульс</div>
-            <span class="badge badge-rose"><i class="fas fa-heartbeat"></i> уд/хв</span>
         </div>
-        {% if chart_data['pulse'] %}
-            <img src="data:image/png;base64,{{ chart_data['pulse'] }}" style="width:100%; border-radius: 8px;">
+        {% if chart_data[metric] %}
+            <img src="data:image/png;base64,{{ chart_data[metric] }}" alt="{{ label }}">
         {% else %}
-            <div style="text-align:center; padding: 40px 0; color: var(--text-3); font-size: 0.88rem;">
-                <i class="fas fa-heartbeat" style="font-size: 2rem; opacity: 0.3; display:block; margin-bottom:10px;"></i>
+            <div class="chart-empty">
+                <i class="fas fa-chart-line"></i>
                 Немає даних
             </div>
         {% endif %}
     </div>
+    {% endfor %}
+</div>
 
-    <div class="card">
-        <div class="flex-center justify-between mb-8">
-            <div class="card-title">Сон</div>
-            <span class="badge" style="background:rgba(139,92,246,0.1);color:var(--violet);"><i class="fas fa-moon"></i> год</span>
-        </div>
-        {% if chart_data['sleep'] %}
-            <img src="data:image/png;base64,{{ chart_data['sleep'] }}" style="width:100%; border-radius: 8px;">
-        {% else %}
-            <div style="text-align:center; padding: 40px 0; color: var(--text-3); font-size: 0.88rem;">
-                <i class="fas fa-moon" style="font-size: 2rem; opacity: 0.3; display:block; margin-bottom:10px;"></i>
-                Немає даних
+<!-- RECOMMENDATIONS -->
+<div class="section-label">
+    <i class="fas fa-lightbulb" style="color:var(--amber);"></i> Персональні рекомендації
+</div>
+
+<div class="rec-grid">
+
+    <div class="rec-col" style="border-top:3px solid var(--teal);">
+        <div class="rec-header">
+            <div class="rec-header-title">
+                <div class="rec-icon" style="background:var(--teal-light);color:var(--teal);">
+                    <i class="fas fa-code-branch"></i>
+                </div>
+                Прості правила
             </div>
+            <span class="badge badge-teal">Rule-based</span>
+        </div>
+        <div class="rec-body">
+        {% if rule_recs %}{% for cat, rec in rule_recs %}
+            <div class="rec-item"><div class="rec-cat">{{ cat }}</div><div class="rec-text">{{ rec }}</div></div>
+        {% endfor %}{% else %}
+            <div class="rec-empty"><i class="fas fa-inbox"></i>Введіть дані у трекері</div>
         {% endif %}
+        </div>
     </div>
 
-    <div class="card">
-        <div class="flex-center justify-between mb-8">
-            <div class="card-title">Вода</div>
-            <span class="badge" style="background:rgba(6,182,212,0.1);color:var(--cyan);"><i class="fas fa-tint"></i> л</span>
-        </div>
-        {% if chart_data['water_intake'] %}
-            <img src="data:image/png;base64,{{ chart_data['water_intake'] }}" style="width:100%; border-radius: 8px;">
-        {% else %}
-            <div style="text-align:center; padding: 40px 0; color: var(--text-3); font-size: 0.88rem;">
-                <i class="fas fa-tint" style="font-size: 2rem; opacity: 0.3; display:block; margin-bottom:10px;"></i>
-                Немає даних
+    <div class="rec-col" style="border-top:3px solid var(--blue);">
+        <div class="rec-header">
+            <div class="rec-header-title">
+                <div class="rec-icon" style="background:var(--blue-light);color:var(--blue);">
+                    <i class="fas fa-brain"></i>
+                </div>
+                ML-аналіз
             </div>
+            <span class="badge badge-blue">Машинне навчання</span>
+        </div>
+        <div class="rec-body">
+        {% if ml_recs %}{% for cat, rec in ml_recs %}
+            <div class="rec-item"><div class="rec-cat">{{ cat }}</div><div class="rec-text">{{ rec }}</div></div>
+        {% endfor %}{% else %}
+            <div class="rec-empty"><i class="fas fa-robot"></i>Введіть дані у трекері</div>
         {% endif %}
+        </div>
     </div>
 
-    <div class="card">
-        <div class="flex-center justify-between mb-8">
-            <div class="card-title">Кроки</div>
-            <span class="badge badge-emerald"><i class="fas fa-shoe-prints"></i></span>
-        </div>
-        {% if chart_data['steps'] %}
-            <img src="data:image/png;base64,{{ chart_data['steps'] }}" style="width:100%; border-radius: 8px;">
-        {% else %}
-            <div style="text-align:center; padding: 40px 0; color: var(--text-3); font-size: 0.88rem;">
-                <i class="fas fa-walking" style="font-size: 2rem; opacity: 0.3; display:block; margin-bottom:10px;"></i>
-                Немає даних
+    <div class="rec-col" style="border-top:3px solid var(--violet);">
+        <div class="rec-header">
+            <div class="rec-header-title">
+                <div class="rec-icon" style="background:var(--violet-light);color:var(--violet);">
+                    <i class="fas fa-robot"></i>
+                </div>
+                AI-асистент
             </div>
+            <span class="badge badge-violet">Мовна модель</span>
+        </div>
+        <div class="rec-body">
+        {% if ai_recs %}{% for cat, rec in ai_recs %}
+            <div class="rec-item"><div class="rec-cat">{{ cat }}</div><div class="rec-text">{{ rec }}</div></div>
+        {% endfor %}{% else %}
+            <div class="rec-empty"><i class="fas fa-comment-dots"></i>Введіть дані у трекері</div>
         {% endif %}
+        </div>
     </div>
 
 </div>
+
 {% endblock %}

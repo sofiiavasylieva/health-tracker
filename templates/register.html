@@ -6,51 +6,119 @@
     <title>Реєстрація — Health Tracker</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/modern.css') }}">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-</head>
-<body class="auth-layout">
+    <style>
+        *{box-sizing:border-box;margin:0;padding:0;}
+        body{min-height:100vh;display:flex;font-family:'Inter',-apple-system,sans-serif;background:#f0f4ff;}
+        .split{display:flex;min-height:100vh;width:100%;}
 
-<div class="auth-card">
-    <div class="auth-brand">
-        <div class="brand-icon" style="width:32px;height:32px;background:linear-gradient(135deg,#6366f1,#8b5cf6);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:0.9rem;">❤️</div>
-        Health Tracker
+        .left{
+            flex:1;
+            background:linear-gradient(150deg,#1e3a8a 0%,#2563eb 60%,#3b82f6 100%);
+            display:flex;flex-direction:column;justify-content:center;
+            padding:64px 72px;position:relative;overflow:hidden;
+        }
+        .left::before{content:'';position:absolute;top:-120px;right:-120px;width:420px;height:420px;border-radius:50%;background:rgba(255,255,255,0.05);}
+        .left::after{content:'';position:absolute;bottom:-80px;left:-60px;width:280px;height:280px;border-radius:50%;background:rgba(255,255,255,0.04);}
+
+        .logo{display:flex;align-items:center;gap:16px;margin-bottom:64px;position:relative;z-index:1;}
+        .logo-box{width:60px;height:60px;background:rgba(255,255,255,0.18);border-radius:18px;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.2);}
+        .logo-name{font-size:1.5rem;font-weight:800;color:white;letter-spacing:-0.02em;}
+
+        .hero{position:relative;z-index:1;}
+        .hero h1{font-size:5rem;font-weight:900;color:white;line-height:1.05;letter-spacing:-0.04em;margin-bottom:28px;}
+        .hero h1 span{color:rgba(255,255,255,0.6);}
+        .hero p{font-size:1.25rem;color:rgba(255,255,255,0.65);line-height:1.7;margin-bottom:52px;max-width:480px;}
+
+        .steps{display:flex;flex-direction:column;gap:20px;position:relative;z-index:1;}
+        .step{display:flex;align-items:center;gap:18px;}
+        .step-num{
+            width:54px;height:54px;border-radius:16px;
+            background:rgba(255,255,255,0.12);
+            border:1px solid rgba(255,255,255,0.15);
+            display:flex;align-items:center;justify-content:center;
+            font-size:1.2rem;font-weight:800;color:white;flex-shrink:0;
+        }
+        .step-text{color:rgba(255,255,255,0.8);font-size:1.2rem;font-weight:500;}
+
+        .right{
+            width:620px;min-width:620px;background:white;
+            display:flex;flex-direction:column;justify-content:center;
+            padding:72px 80px;
+            box-shadow:-8px 0 48px rgba(0,0,0,0.1);
+            margin-left:-40px;
+            border-radius:28px 0 0 28px;
+            position:relative;z-index:2;
+        }
+        .right-title{font-size:2.5rem;font-weight:800;color:#0f172a;letter-spacing:-0.03em;margin-bottom:10px;}
+        .right-sub{font-size:1.1rem;color:#94a3b8;margin-bottom:44px;}
+
+        .fg{margin-bottom:24px;}
+        .fl{display:block;font-size:0.95rem;font-weight:600;color:#374151;margin-bottom:10px;}
+        .fc{width:100%;padding:16px 18px;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:12px;color:#0f172a;font-size:1.05rem;font-family:inherit;outline:none;transition:all 0.15s;}
+        .fc:focus{border-color:#2563eb;background:white;box-shadow:0 0 0 3px rgba(37,99,235,0.1);}
+        .fc::placeholder{color:#cbd5e1;}
+
+        .btn-s{width:100%;padding:17px;background:#2563eb;color:white;border:none;border-radius:12px;font-size:1.1rem;font-weight:700;font-family:inherit;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 20px rgba(37,99,235,0.4);margin-top:8px;}
+        .btn-s:hover{background:#1d4ed8;transform:translateY(-1px);box-shadow:0 6px 24px rgba(37,99,235,0.45);}
+        .foot{text-align:center;font-size:1rem;color:#94a3b8;margin-top:28px;}
+        .foot a{color:#2563eb;font-weight:700;text-decoration:none;}
+        .alert{padding:12px 16px;border-radius:8px;font-size:0.85rem;font-weight:500;margin-bottom:22px;}
+        .alert-error{background:#fef2f2;color:#991b1b;border:1px solid rgba(239,68,68,0.2);}
+        .alert-success{background:#ecfdf5;color:#065f46;border:1px solid rgba(16,185,129,0.2);}
+
+        @media(max-width:960px){.left{display:none;}.right{width:100%;min-width:0;padding:40px 32px;}}
+    </style>
+</head>
+<body>
+<div class="split">
+    <div class="left">
+        <div class="logo">
+            <div class="logo-box">
+                <svg viewBox="0 0 28 28" fill="none" width="26" height="26">
+                    <path d="M14 24S5 18.5 5 11.5A6.5 6.5 0 0 1 14 6a6.5 6.5 0 0 1 9 5.5C23 18.5 14 24 14 24z" fill="white" fill-opacity="0.9"/>
+                    <path d="M8 14h3l2-4 2 8 2-5 1 1h3" stroke="#1e40af" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                </svg>
+            </div>
+            <span class="logo-name">Health Tracker</span>
+        </div>
+        <div class="hero">
+            <h1>Почни стежити<br><span>вже сьогодні</span></h1>
+            <p>Реєстрація займає хвилину. Після цього отримаєш персоналізовані рекомендації на основі своїх показників.</p>
+            <div class="steps">
+                <div class="step"><div class="step-num">1</div><span class="step-text">Створи акаунт та заповни профіль</span></div>
+                <div class="step"><div class="step-num">2</div><span class="step-text">Щодня вводь показники здоров'я</span></div>
+                <div class="step"><div class="step-num">3</div><span class="step-text">Отримуй персоналізовані рекомендації</span></div>
+            </div>
+        </div>
     </div>
 
-    <div class="auth-title">Створи акаунт</div>
-    <div class="auth-sub">Почни стежити за своїм здоров'ям вже сьогодні</div>
+    <div class="right">
+        <div class="right-title">Створити акаунт</div>
+        <div class="right-sub">Почніть стежити за своїм здоров'ям</div>
 
-    {% with messages = get_flashed_messages(with_categories=True) %}
-        {% for category, message in messages %}
-            <div class="alert alert-{{ 'success' if category == 'success' else 'error' }}" style="margin-bottom: 16px;">
-                {{ message }}
+        {% with messages = get_flashed_messages(with_categories=True) %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ 'success' if category == 'success' else 'error' }}">{{ message }}</div>
+            {% endfor %}
+        {% endwith %}
+
+        <form method="POST" action="/register">
+            <div class="fg">
+                <label class="fl">Ім'я користувача</label>
+                <input type="text" name="username" class="fc" placeholder="Твоє ім'я" required>
             </div>
-        {% endfor %}
-    {% endwith %}
-
-    <form method="POST" action="/register">
-        <div class="form-group">
-            <label class="form-label">Ім'я користувача</label>
-            <input type="text" name="username" class="form-control" placeholder="Твоє ім'я" required>
-        </div>
-
-        <div class="form-group">
-            <label class="form-label">Email</label>
-            <input type="email" name="email" class="form-control" placeholder="example@mail.com" required>
-        </div>
-
-        <div class="form-group">
-            <label class="form-label">Пароль</label>
-            <input type="password" name="password" class="form-control" placeholder="Мінімум 8 символів" required>
-        </div>
-
-        <button type="submit" class="btn btn-primary btn-full" style="margin-top: 8px;">
-            Зареєструватись <i class="fas fa-arrow-right"></i>
-        </button>
-    </form>
-
-    <div class="auth-footer">
-        Вже є акаунт? <a href="{{ url_for('login') }}">Увійти</a>
+            <div class="fg">
+                <label class="fl">Email</label>
+                <input type="email" name="email" class="fc" placeholder="example@mail.com" required>
+            </div>
+            <div class="fg">
+                <label class="fl">Пароль</label>
+                <input type="password" name="password" class="fc" placeholder="Мінімум 8 символів" required>
+            </div>
+            <button type="submit" class="btn-s">Зареєструватись <i class="fas fa-arrow-right"></i></button>
+        </form>
+        <div class="foot">Вже є акаунт? <a href="{{ url_for('login') }}">Увійти</a></div>
     </div>
 </div>
-
 </body>
 </html>
