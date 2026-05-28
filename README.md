@@ -6,9 +6,9 @@
 
 ## Автор
 
-- ПІБ: Васильєва С.О.
+- ПІБ: Васильєва Софія
 - Група: ФеС-42
-- Керівник: — Колич І.І.
+- Керівник: — Колич Ігор, доцент
 - Дата виконання: 2026
 
 ---
@@ -18,7 +18,7 @@
 - Тип проєкту: Вебзастосунок
 - Мова програмування: Python 3.13
 - Фреймворки / Бібліотеки: Flask, scikit-learn, Groq API, Jinja2, SQLite
-
+- Посилання на GitHub: https://github.com/sofiiavasylieva/health-tracker.git
 ---
 
 ## Опис функціоналу
@@ -55,63 +55,66 @@
 
 ### 1. Встановлення інструментів
 
-- Python 3.13
-- pip
+- Python 3.13: https://www.python.org/downloads/
+- При встановленні на Windows поставити галочку «Add Python to PATH»
+- pip встановлюється автоматично разом з Python
+
+Перевірка:
+```bash
+python3 --version
+pip3 --version
+```
 
 ### 2. Клонування репозиторію
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/health-tracker.git
+git clone https://github.com/sofiiavasylieva/health-tracker.git
 cd health-tracker
 ```
 
-### 3. Встановлення залежностей
+### 3. Створення та активація віртуального середовища
+
+```bash
+python3 -m venv venv
+
+# macOS/Linux
+source venv/bin/activate
+
+# Windows
+venv\Scripts\activate
+```
+
+Після активації в терміналі з'явиться (venv).
+
+### 4. Встановлення залежностей
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 4. Створення .env файлу
-GROQ_API_KEY=your_groq_api_key_here
-SECRET_KEY=your_secret_key_here
+
+### 5. Завантаження ресурсів
+ML-модель навчається автоматично при першому запуску — окремого завантаження не потрібно.
+
+Модель llama-3.3-70b використовується через Groq API — локальне завантаження не потрібне.
+Необхідно лише отримати безкоштовний API ключ: https://console.groq.com
+
+
+### 6. Копіювання .env.example і заповнення своїми даними:
+
+```bash
+cp .env.example .env
+```
 
 Отримати безкоштовний Groq API ключ: https://console.groq.com
 
-### 5. Запуск
+### 7. Запуск
 
 ```bash
 python app.py
 ```
 
-Відкрий браузер: http://localhost:5000
-
-### 6. Тестові облікові записи
-
-| Email | Пароль | Роль |
-|-------|--------|------|
-| andrii@test.com | password123 | Адміністратор |
-| olena@test.com | password123 | Користувач |
-| vasyl@test.com | password123 | Користувач |
-
-### 7. Зробити адміна (за потреби)
-
-```bash
-python make_admin.py andrii@test.com
-```
-
----
-
-## Основні маршрути
-
-| Маршрут | Метод | Опис |
-|---------|-------|------|
-| / | GET | Головна сторінка / дашборд |
-| /register | GET/POST | Реєстрація |
-| /login | GET/POST | Авторизація |
-| /tracker | GET/POST | Введення показників |
-| /ai_agent | GET | AI-асистент чат |
-| /research | GET | Дослідження (адмін) |
-| /profile | GET/POST | Профіль користувача |
+Відкрий браузер: http://localhost:5003
 
 ---
 
@@ -125,6 +128,35 @@ python make_admin.py andrii@test.com
 6. Калькулятори — розрахуй ІМТ та добову норму калорій
 
 ---
+
+### 8. Тестові облікові записи
+
+База даних вже містить тестові профілі з усіма правами.
+
+| Email | Пароль | Роль |
+|-------|--------|------|
+| andrii@test.com | password123 | Адміністратор |
+| olena@test.com | password123 | Користувач |
+| vasyl@test.com | password123 | Користувач |
+
+### 9. Зробити адміна вручну (якщо потрібно для нового користувача)
+
+```bash
+python make_admin.py email@example.com
+```
+
+## Основні маршрути
+
+| Маршрут | Метод | Опис |
+|---------|-------|------|
+| / | GET | Головна сторінка / дашборд |
+| /register | GET/POST | Реєстрація |
+| /login | GET/POST | Авторизація |
+| /tracker | GET/POST | Введення показників |
+| /ai_agent | GET | AI-асистент чат |
+| /research | GET | Дослідження (адмін) |
+| /profile | GET/POST | Профіль користувача |
+
 
 ## Запуск тестів
 
