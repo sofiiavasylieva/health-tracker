@@ -19,7 +19,7 @@
     <div class="section-label"><i class="fas fa-chart-pie icon-blue"></i> Розподіл типів рекомендацій</div>
     <div class="card mb-20" style="padding:8px;">
         {% if chart_dist %}
-            <img src="data:image/png;base64,{{ chart_dist }}" style="width:100%;border-radius:8px;">
+            <img src="data:image/png;base64,{{ chart_dist }}" style="max-width:75%;display:block;margin:0 auto;border-radius:8px;">
         {% else %}
             <div style="text-align:center;padding:40px;color:var(--text-3);">Немає даних — запусти seed_db.py та generate_all_recommendations.py</div>
         {% endif %}
@@ -28,7 +28,7 @@
     <div class="section-label"><i class="fas fa-user-check icon-blue"></i> Рівень персоналізації рекомендацій</div>
     <div class="card mb-20" style="padding:8px;">
         {% if chart_pers %}
-            <img src="data:image/png;base64,{{ chart_pers }}" style="width:100%;border-radius:8px;">
+            <img src="data:image/png;base64,{{ chart_pers }}" style="max-width:75%;display:block;margin:0 auto;border-radius:8px;">
         {% else %}
             <div style="text-align:center;padding:40px;color:var(--text-3);">Немає даних</div>
         {% endif %}
