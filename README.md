@@ -1,8 +1,12 @@
 # Health Tracker
 
 Вебсистема відстеження здоров'я з AI-асистентом та трьома підходами до формування персоналізованих рекомендацій: rule-based, machine learning та AI (LLM).
-
 ---
+
+## Releases
+
+Версія `v1.0.0` доступна за посиланням: [https://github.com/sofiiavasylieva/health-tracker/releases/tag/v1.0.0](https://github.com/sofiiavasylieva/health-tracker/releases/tag/v1.0.0)
+
 
 ## Автор
 
