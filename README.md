@@ -5,7 +5,7 @@
 
 ## Releases
 
-Версія `v1.0.0` доступна за посиланням: [https://github.com/sofiiavasylieva/health-tracker/releases/tag/v1.0.0](https://github.com/sofiiavasylieva/health-tracker/releases/tag/v1.0.0)
+Версія `v1.0.0` доступна за посиланням: [https://github.com/sofiiavasylieva/health-tracker/releases/tag/v1.1.0](https://github.com/sofiiavasylieva/health-tracker/releases/tag/v1.1.0)
 
 
 ## Автор
