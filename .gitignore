@@ -5,4 +5,5 @@ health_tracker.db
 venv/
 .venv/
 *.egg-info/
- 
+2026_*.zip
+2026_*/

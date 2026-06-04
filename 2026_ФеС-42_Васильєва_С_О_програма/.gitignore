@@ -1,8 +1,0 @@
-.env
-__pycache__/
-*.pyc
-health_tracker.db
-venv/
-.venv/
-*.egg-info/
- 
