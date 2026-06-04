@@ -177,11 +177,11 @@ class UserRepository:
             "SELECT * FROM users WHERE id = ?", (user_id,), fetchone=True
         )
 
-    def register_user(self, username: str, email: str, password: str, consent_given: str = None) -> bool:
+    def register_user(self, username: str, email: str, password: str) -> bool:
         try:
             self.db_repo.execute_query(
-                "INSERT INTO users (username, email, password, consent_given) VALUES (?, ?, ?, ?)",
-                (username, email, password, consent_given)
+                "INSERT INTO users (username, email, password) VALUES (?, ?, ?)",
+                (username, email, password)
             )
             return True
         except Exception:
@@ -216,13 +216,6 @@ class HealthTrackerApp:
         # Міграція: додаємо is_admin якщо колонки ще немає
         try:
             self.db_repo.execute_query("ALTER TABLE users ADD COLUMN is_admin INTEGER DEFAULT 0")
-        except Exception:
-            pass  # Колонка вже існує
-
-        try:
-            self.db_repo.execute_query(
-                "ALTER TABLE users ADD COLUMN consent_given TEXT DEFAULT NULL"
-            )
         except Exception:
             pass  # Колонка вже існує
         csv_path = os.path.join(os.path.dirname(__file__), "personalised_dataset_clean.csv")
@@ -793,12 +786,7 @@ class HealthTrackerApp:
                     flash('Пароль має бути довшим за 8 символів!', 'error')
                     return redirect(url_for('register'))
                 hashed_pw = generate_password_hash(password)
-                consent = request.form.get('consent')
-                if not consent:
-                    flash('Необхідно погодитись на обробку персональних даних!', 'error')
-                    return redirect(url_for('register'))
-                consent_date = datetime.now().isoformat()
-                if self.user_repo.register_user(username, email, hashed_pw, consent_date):
+                if self.user_repo.register_user(username, email, hashed_pw):
                     user = self.user_repo.get_user_by_email(email)
                     if user:
                         session['user_id'] = user[0]

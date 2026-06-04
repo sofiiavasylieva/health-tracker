@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Реєстрація — Health Tracker</title>
+    <title>Вхід — Health Tracker</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/modern.css') }}">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -11,6 +11,7 @@
         body{min-height:100vh;display:flex;font-family:'Inter',-apple-system,sans-serif;background:#f0f4ff;}
         .split{display:flex;min-height:100vh;width:100%;}
 
+        /* ── LEFT ── */
         .left{
             flex:1;
             background:linear-gradient(150deg,#1e3a8a 0%,#2563eb 60%,#3b82f6 100%);
@@ -21,7 +22,12 @@
         .left::after{content:'';position:absolute;bottom:-80px;left:-60px;width:280px;height:280px;border-radius:50%;background:rgba(255,255,255,0.04);}
 
         .logo{display:flex;align-items:center;gap:16px;margin-bottom:64px;position:relative;z-index:1;}
-        .logo-box{width:60px;height:60px;background:rgba(255,255,255,0.18);border-radius:18px;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.2);}
+        .logo-box{
+            width:60px;height:60px;
+            background:rgba(255,255,255,0.18);
+            border-radius:18px;display:flex;align-items:center;justify-content:center;
+            backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.2);
+        }
         .logo-name{font-size:1.5rem;font-weight:800;color:white;letter-spacing:-0.02em;}
 
         .hero{position:relative;z-index:1;}
@@ -29,17 +35,18 @@
         .hero h1 span{color:rgba(255,255,255,0.6);}
         .hero p{font-size:1.25rem;color:rgba(255,255,255,0.65);line-height:1.7;margin-bottom:52px;max-width:480px;}
 
-        .steps{display:flex;flex-direction:column;gap:20px;position:relative;z-index:1;}
-        .step{display:flex;align-items:center;gap:18px;}
-        .step-num{
+        .feats{display:flex;flex-direction:column;gap:20px;position:relative;z-index:1;}
+        .feat{display:flex;align-items:center;gap:18px;}
+        .feat-icon{
             width:54px;height:54px;border-radius:16px;
             background:rgba(255,255,255,0.12);
             border:1px solid rgba(255,255,255,0.15);
             display:flex;align-items:center;justify-content:center;
-            font-size:1.2rem;font-weight:800;color:white;flex-shrink:0;
+            font-size:1.4rem;flex-shrink:0;
         }
-        .step-text{color:rgba(255,255,255,0.8);font-size:1.2rem;font-weight:500;}
+        .feat-text{color:rgba(255,255,255,0.8);font-size:1.2rem;font-weight:500;}
 
+        /* ── RIGHT ── */
         .right{
             width:620px;min-width:620px;background:white;
             display:flex;flex-direction:column;justify-content:center;
@@ -54,14 +61,26 @@
 
         .fg{margin-bottom:24px;}
         .fl{display:block;font-size:0.95rem;font-weight:600;color:#374151;margin-bottom:10px;}
-        .fc{width:100%;padding:16px 18px;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:12px;color:#0f172a;font-size:1.05rem;font-family:inherit;outline:none;transition:all 0.15s;}
+        .fc{
+            width:100%;padding:16px 18px;
+            background:#f8fafc;border:1.5px solid #e2e8f0;
+            border-radius:12px;color:#0f172a;font-size:1.05rem;
+            font-family:inherit;outline:none;transition:all 0.15s;
+        }
         .fc:focus{border-color:#2563eb;background:white;box-shadow:0 0 0 3px rgba(37,99,235,0.1);}
         .fc::placeholder{color:#cbd5e1;}
 
-        .btn-s{width:100%;padding:17px;background:#2563eb;color:white;border:none;border-radius:12px;font-size:1.1rem;font-weight:700;font-family:inherit;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 20px rgba(37,99,235,0.4);margin-top:8px;}
+        .btn-s{
+            width:100%;padding:17px;background:#2563eb;color:white;
+            border:none;border-radius:12px;font-size:1.1rem;font-weight:700;
+            font-family:inherit;cursor:pointer;transition:all 0.15s;
+            display:flex;align-items:center;justify-content:center;gap:8px;
+            box-shadow:0 4px 20px rgba(37,99,235,0.4);margin-top:8px;
+        }
         .btn-s:hover{background:#1d4ed8;transform:translateY(-1px);box-shadow:0 6px 24px rgba(37,99,235,0.45);}
         .foot{text-align:center;font-size:1rem;color:#94a3b8;margin-top:28px;}
         .foot a{color:#2563eb;font-weight:700;text-decoration:none;}
+        .err{font-size:0.78rem;color:#ef4444;margin-top:5px;display:flex;align-items:center;gap:4px;}
         .alert{padding:12px 16px;border-radius:8px;font-size:0.85rem;font-weight:500;margin-bottom:22px;}
         .alert-error{background:#fef2f2;color:#991b1b;border:1px solid rgba(239,68,68,0.2);}
         .alert-success{background:#ecfdf5;color:#065f46;border:1px solid rgba(16,185,129,0.2);}
@@ -82,19 +101,19 @@
             <span class="logo-name">Health Tracker</span>
         </div>
         <div class="hero">
-            <h1>Почни стежити<br><span>вже сьогодні</span></h1>
-            <p>Реєстрація займає хвилину. Після цього отримаєш персоналізовані рекомендації на основі своїх показників.</p>
-            <div class="steps">
-                <div class="step"><div class="step-num">1</div><span class="step-text">Створи акаунт та заповни профіль</span></div>
-                <div class="step"><div class="step-num">2</div><span class="step-text">Щодня вводь показники здоров'я</span></div>
-                <div class="step"><div class="step-num">3</div><span class="step-text">Отримуй персоналізовані рекомендації</span></div>
+            <h1>Стеж за здоров'ям<br><span>розумно</span></h1>
+            <p>Персоналізовані рекомендації на основі Rule-Based правил, Machine Learning та великої мовної моделі AI</p>
+            <div class="feats">
+                <div class="feat"><div class="feat-icon">📊</div><span class="feat-text">Графіки та динаміка показників</span></div>
+                <div class="feat"><div class="feat-icon">🧠</div><span class="feat-text">ML-аналіз та прогнозування тренду</span></div>
+                <div class="feat"><div class="feat-icon">🤖</div><span class="feat-text">AI-асистент на базі Llama 3.3 70B</span></div>
             </div>
         </div>
     </div>
 
     <div class="right">
-        <div class="right-title">Створити акаунт</div>
-        <div class="right-sub">Почніть стежити за своїм здоров'ям</div>
+        <div class="right-title">З поверненням!</div>
+        <div class="right-sub">Введіть дані для входу в систему</div>
 
         {% with messages = get_flashed_messages(with_categories=True) %}
             {% for category, message in messages %}
@@ -102,32 +121,20 @@
             {% endfor %}
         {% endwith %}
 
-        <form method="POST" action="/register">
-            <div class="fg">
-                <label class="fl">Ім'я користувача</label>
-                <input type="text" name="username" class="fc" placeholder="Твоє ім'я" required>
-            </div>
+        <form method="POST" action="/login">
             <div class="fg">
                 <label class="fl">Email</label>
                 <input type="email" name="email" class="fc" placeholder="example@mail.com" required>
+                {% if error_email %}<div class="err"><i class="fas fa-exclamation-circle"></i>{{ error_email }}</div>{% endif %}
             </div>
             <div class="fg">
                 <label class="fl">Пароль</label>
-                <input type="password" name="password" class="fc" placeholder="Мінімум 8 символів" required>
+                <input type="password" name="password" class="fc" placeholder="••••••••" required>
+                {% if error_password %}<div class="err"><i class="fas fa-exclamation-circle"></i>{{ error_password }}</div>{% endif %}
             </div>
-            <div style="margin: 16px 0;">
-                <label style="display:flex; align-items:flex-start; gap:10px; cursor:pointer;">
-                  <input type="checkbox" name="consent" required style="margin-top:3px;">
-                  <span style="font-size:13px; color:#64748b; line-height:1.5;">
-                    Я погоджуюсь на обробку моїх персональних даних, включаючи
-                    показники здоров'я. Дані можуть передаватись до сервісу Groq
-                    для генерації AI-рекомендацій.
-                  </span>
-                </label>
-              </div>
-            <button type="submit" class="btn-s">Зареєструватись <i class="fas fa-arrow-right"></i></button>
+            <button type="submit" class="btn-s">Увійти <i class="fas fa-arrow-right"></i></button>
         </form>
-        <div class="foot">Вже є акаунт? <a href="{{ url_for('login') }}">Увійти</a></div>
+        <div class="foot">Ще немає акаунту? <a href="{{ url_for('register') }}">Зареєструватися</a></div>
     </div>
 </div>
 </body>

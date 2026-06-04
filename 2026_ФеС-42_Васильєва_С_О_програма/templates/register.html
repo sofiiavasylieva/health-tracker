@@ -115,16 +115,6 @@
                 <label class="fl">Пароль</label>
                 <input type="password" name="password" class="fc" placeholder="Мінімум 8 символів" required>
             </div>
-            <div style="margin: 16px 0;">
-                <label style="display:flex; align-items:flex-start; gap:10px; cursor:pointer;">
-                  <input type="checkbox" name="consent" required style="margin-top:3px;">
-                  <span style="font-size:13px; color:#64748b; line-height:1.5;">
-                    Я погоджуюсь на обробку моїх персональних даних, включаючи
-                    показники здоров'я. Дані можуть передаватись до сервісу Groq
-                    для генерації AI-рекомендацій.
-                  </span>
-                </label>
-              </div>
             <button type="submit" class="btn-s">Зареєструватись <i class="fas fa-arrow-right"></i></button>
         </form>
         <div class="foot">Вже є акаунт? <a href="{{ url_for('login') }}">Увійти</a></div>
